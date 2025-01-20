@@ -1,0 +1,10 @@
+﻿services:
+  database:
+    image: "mariadb:latest"
+    container_name: "mariadb-projekt_po"
+    environment:
+        MYSQL_USER: "root"
+        MYSQL_ROOT_PASSWORD: "123"
+        MYSQL_DATABASE: "projekt_po"
+    ports:
+        - "3306:3306"
