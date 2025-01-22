@@ -6,11 +6,11 @@ namespace projekt_po.Services;
 
 public class UserService
 {
-    private readonly UserRepository _userRepository;
+    private readonly IUserRepository _userRepository;
     
     public event LogEventHandler? LogEvent;
 
-    public UserService(UserRepository userRepository, Logger logger)
+    public UserService(IUserRepository userRepository, ILogger logger)
     {
         _userRepository = userRepository;
         LogEvent += logger.Log;

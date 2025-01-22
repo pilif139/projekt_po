@@ -2,7 +2,12 @@
 
 public delegate void LogEventHandler(string message);
 
-public class Logger
+public interface ILogger
+{
+    void Log(string message);
+}
+
+public class Logger : ILogger
 {
     private readonly string _filePath;
 

@@ -5,3 +5,8 @@ riderModule.iml
 /_ReSharper.Caches/
 
 .env
+log.txt
+
+.idea
+.vs
+.vscode

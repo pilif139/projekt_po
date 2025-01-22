@@ -3,7 +3,18 @@ using projekt_po.Model;
 
 namespace projekt_po.Repository;
 
-public class UserRepository
+// interface for mocking UserRepository in tests
+public interface IUserRepository
+{
+    void Add(string name, string surname, string password, Role role);
+    User? GetById(int id);
+    List<User> GetAll();
+    List<User> GetAllByRole(Role role);
+    User? GetByNameAndSurname(string name, string surname);
+    bool Delete(int id);
+}
+
+public class UserRepository : IUserRepository
 {
     private readonly DatabaseContext _db;
     

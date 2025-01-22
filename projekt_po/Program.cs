@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using projekt_po.Database;
 using DotNetEnv;
+using projekt_po.Model;
 using projekt_po.Repository;
 using projekt_po.Services;
 using projekt_po.Utils;
@@ -15,8 +16,8 @@ Logger logger = new Logger("log.txt");
 
 var services = new ServiceCollection();
 services.AddDbContext<DatabaseContext>(); // could be AddSingleton too
-services.AddSingleton(logger);
-services.AddTransient<UserRepository>();
+services.AddSingleton<ILogger>(logger);
+services.AddTransient<IUserRepository, UserRepository>();
 services.AddTransient<UserService>();
 // add more services here like this: services.AddTransient<MyService1>();
 
