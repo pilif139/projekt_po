@@ -14,6 +14,7 @@ public interface IUserRepository
     bool Delete(int id);
 }
 
+// class that uses repository design pattern to seperate database logic from service logic
 public class UserRepository : IUserRepository
 {
     private readonly DatabaseContext _db;
@@ -61,6 +62,4 @@ public class UserRepository : IUserRepository
 
         return false;
     }
-    
-    
 }

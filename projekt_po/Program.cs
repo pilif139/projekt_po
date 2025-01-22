@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using projekt_po.Database;
 using DotNetEnv;
-using projekt_po.Model;
 using projekt_po.Repository;
 using projekt_po.Services;
 using projekt_po.Utils;

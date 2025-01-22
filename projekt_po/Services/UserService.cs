@@ -4,16 +4,13 @@ using projekt_po.Utils;
 
 namespace projekt_po.Services;
 
-public class UserService
+public class UserService : BaseService
 {
     private readonly IUserRepository _userRepository;
-    
-    public event LogEventHandler? LogEvent;
 
-    public UserService(IUserRepository userRepository, ILogger logger)
+    public UserService(IUserRepository userRepository, ILogger logger) : base(logger)
     {
         _userRepository = userRepository;
-        LogEvent += logger.Log;
     }
     
     public void AddUser(string name, string surname, string password, Role role)
@@ -21,7 +18,7 @@ public class UserService
         string hashedPassword = Hash.HashPassword(password);
         _userRepository.Add(name, surname, hashedPassword, role);
         Console.WriteLine("User added successfully.");
-        LogEvent?.Invoke($"User {name} {surname} with role {role} added.");
+        Log($"User {name} {surname} with role {role} added.");
     }
     
     public void DeleteUser(int id)
@@ -30,12 +27,12 @@ public class UserService
         if (success)
         {
             Console.WriteLine("User deleted successfully.");
-            LogEvent?.Invoke($"User with id {id} deleted.");
+            Log($"User with id {id} deleted.");
         }
         else
         {
             Console.WriteLine("User not found.");
-            LogEvent?.Invoke($"Tried to delete non-existent user with {id} id.");
+            Log($"Tried to delete non-existent user with {id} id.");
         }
     }
     
@@ -45,10 +42,10 @@ public class UserService
         if (user == null)
         {
             Console.WriteLine("User not found");
-            LogEvent?.Invoke($"User with id {id} not found.");
+            Log($"User with id {id} not found.");
             return null;
         }
-        LogEvent?.Invoke($"User with id {id} found.");
+        Log($"User with id {id} found.");
         return user;
     }
 
@@ -60,6 +57,6 @@ public class UserService
         {
             Console.WriteLine($"ID:{user.Id}.{user.Name} {user.Surname}, rola: {user.Role}");
         }
-        LogEvent?.Invoke("List of users displayed.");
+        Log("List of users displayed.");
     }
 }
