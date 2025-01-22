@@ -26,9 +26,17 @@ public class UserService
     
     public void DeleteUser(int id)
     {
-        _userRepository.Delete(id);
-        Console.WriteLine("User deleted successfully.");
-        LogEvent?.Invoke($"User with id {id} deleted.");
+        bool success = _userRepository.Delete(id);
+        if (success)
+        {
+            Console.WriteLine("User deleted successfully.");
+            LogEvent?.Invoke($"User with id {id} deleted.");
+        }
+        else
+        {
+            Console.WriteLine("User not found.");
+            LogEvent?.Invoke($"Tried to delete non-existent user with {id} id.");
+        }
     }
     
     public User? GetUserById(int id)
@@ -50,7 +58,7 @@ public class UserService
         Console.WriteLine("Users:");
         foreach (var user in users)
         {
-            Console.WriteLine($"ID:{user.Id}.{user.Name} {user.Surname}, rola: {user.Role}");;
+            Console.WriteLine($"ID:{user.Id}.{user.Name} {user.Surname}, rola: {user.Role}");
         }
         LogEvent?.Invoke("List of users displayed.");
     }

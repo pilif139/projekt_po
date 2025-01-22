@@ -38,18 +38,17 @@ public class UserRepository
         return _db.Users.FirstOrDefault(u => u.Name == name && u.Surname == surname);
     }
     
-    public void Delete(int id)
+    public bool Delete(int id)
     {
         var user = _db.Users.Find(id);
         if (user != null)
         {
             _db.Users.Remove(user);
             _db.SaveChanges();
+            return true;
         }
-        else
-        {
-            Console.WriteLine("User not found");
-        }
+
+        return false;
     }
     
     
