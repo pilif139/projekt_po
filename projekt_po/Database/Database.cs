@@ -8,7 +8,7 @@ namespace projekt_po.Database;
 
 public class DatabaseContext : DbContext
 {
-    public DbSet<User> Users { get; set; }
+    public DbSet<User> Users { get; init; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -28,16 +28,25 @@ public class DatabaseContext : DbContext
         try
         {
             optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+            if (!this.Database.CanConnect())
+            {
+                throw new Exception("Cannot connect to database.");
+            }
         }
         catch (ArgumentException e)
         {
             Console.WriteLine("Invalid connection string: " + e.Message);
             Environment.Exit(1);
-            
+
         }
         catch (MySqlException e)
         {
             Console.WriteLine("Error connecting to database: " + e.Message);
+            Environment.Exit(1);
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine("Error: " + e.Message);
             Environment.Exit(1);
         }
 
