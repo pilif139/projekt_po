@@ -10,13 +10,15 @@ public class UserServiceTests : IDisposable
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<ILogger> _loggerMock;
+    private readonly Mock<IRbacService> _rbacMock;
     private readonly UserService _userService;
 
     public UserServiceTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _loggerMock = new Mock<ILogger>();
-        _userService = new UserService(_userRepositoryMock.Object, _loggerMock.Object);
+        _rbacMock = new Mock<IRbacService>();
+        _userService = new UserService(_userRepositoryMock.Object, _rbacMock.Object, _loggerMock.Object);
     }
 
     [Fact]
@@ -33,6 +35,7 @@ public class UserServiceTests : IDisposable
 
         //Assert
         _userRepositoryMock.Verify(repo => repo.Add(name, surname, It.IsAny<string>(), role), Times.Once);
+        _rbacMock.Verify(rbac => rbac.CheckPermissions(Permissions.Write), Times.Once);
     }
 
     [Fact]
@@ -46,6 +49,7 @@ public class UserServiceTests : IDisposable
 
         //Assert
         _userRepositoryMock.Verify(repo => repo.Delete(id), Times.Once);
+        _rbacMock.Verify(rbac => rbac.CheckPermissions(Permissions.Delete), Times.Once);
     }
 
     [Fact]
@@ -65,6 +69,7 @@ public class UserServiceTests : IDisposable
         Assert.NotNull(result);
         Assert.Equal(expectedUser, result);
         _userRepositoryMock.Verify(repo => repo.GetById(id), Times.Once);
+        _rbacMock.Verify(rbac => rbac.CheckPermissions(Permissions.Read), Times.Once);
     }
     
     [Fact]
@@ -80,6 +85,7 @@ public class UserServiceTests : IDisposable
         //Assert
         Assert.Null(result);
         _userRepositoryMock.Verify(repo => repo.GetById(id), Times.Once);
+        _rbacMock.Verify(rbac => rbac.CheckPermissions(Permissions.Read), Times.Once);
     }
     
     // runs after every test

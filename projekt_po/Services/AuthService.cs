@@ -8,6 +8,7 @@ public class AuthService : BaseService
 {
     private User? _loggedUser;
     private readonly IUserRepository _userRepository;
+    
     public AuthService(IUserRepository userRepository, ILogger logger) : base(logger)
     {
         _userRepository = userRepository;
@@ -63,6 +64,21 @@ public class AuthService : BaseService
         _userRepository.Add(name, surname, hashedPassword, role);
         Console.WriteLine("User added successfully.");
         Log($"User {name} {surname} with role {role} added.");
+    }
+    
+    public Role GetLoggedUserRole()
+    {
+        if (_loggedUser == null)
+        {
+            Log("Tried to get role of not logged in user.");
+            return Role.None;
+        }
+        return _loggedUser.Role;
+    }
+    
+    public bool IsUserLogged()
+    {
+        return _loggedUser != null;
     }
 
     public void Logout()

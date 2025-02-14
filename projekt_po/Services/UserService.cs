@@ -1,4 +1,5 @@
-﻿using projekt_po.Model;
+﻿using System.Reflection;
+using projekt_po.Model;
 using projekt_po.Repository;
 using projekt_po.Utils;
 
@@ -7,22 +8,25 @@ namespace projekt_po.Services;
 public class UserService : BaseService
 {
     private readonly IUserRepository _userRepository;
-
-    public UserService(IUserRepository userRepository, ILogger logger) : base(logger)
+    private readonly IRbacService _rbacService;
+    public UserService(IUserRepository userRepository, IRbacService rbacService, ILogger logger) : base(logger)
     {
         _userRepository = userRepository;
+        _rbacService = rbacService;
     }
 
     public void AddUser(string name, string surname, string password, Role role)
     {
+        if(!_rbacService.CheckPermissions(Permissions.Write)) return;
         string hashedPassword = Hash.HashPassword(password);
         _userRepository.Add(name, surname, hashedPassword, role);
         Console.WriteLine("User added successfully.");
         Log($"User {name} {surname} with role {role} added.");
     }
-
+    
     public void DeleteUser(int id)
     {
+        if(!_rbacService.CheckPermissions(Permissions.Delete)) return;
         bool success = _userRepository.Delete(id);
         if (success)
         {
@@ -38,6 +42,7 @@ public class UserService : BaseService
 
     public User? GetUserById(int id)
     {
+        if(!_rbacService.CheckPermissions(Permissions.Read)) return null;
         var user = _userRepository.GetById(id);
         if (user == null)
         {
@@ -51,6 +56,7 @@ public class UserService : BaseService
 
     public void ListUsers()
     {
+        if(!_rbacService.CheckPermissions(Permissions.Read)) return;
         var users = _userRepository.GetAll();
         Console.WriteLine("Users:");
         foreach (var user in users)

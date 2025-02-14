@@ -16,6 +16,8 @@ ILogger logger = new Logger("log.txt");
 var services = new ServiceCollection();
 services.AddDbContext<DatabaseContext>(); // could be AddSingleton too
 services.AddSingleton(logger);
+services.AddSingleton<AuthService>();
+services.AddTransient<RbacService>();
 services.AddTransient<IUserRepository, UserRepository>();
 services.AddTransient<UserService>();
 // add more services here like this: services.AddTransient<MyService1>();
