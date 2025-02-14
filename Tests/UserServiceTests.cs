@@ -17,7 +17,10 @@ public class UserServiceTests : IDisposable
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _loggerMock = new Mock<ILogger>();
+        
         _rbacMock = new Mock<IRbacService>();
+        _rbacMock.Setup(rbac => rbac.CheckPermissions(It.IsAny<Permissions>())).Returns(true);
+        
         _userService = new UserService(_userRepositoryMock.Object, _rbacMock.Object, _loggerMock.Object);
     }
 
