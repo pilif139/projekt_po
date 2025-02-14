@@ -28,10 +28,6 @@ public class DatabaseContext : DbContext
         try
         {
             optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
-            if (!this.Database.CanConnect())
-            {
-                throw new Exception("Cannot connect to database.");
-            }
         }
         catch (ArgumentException e)
         {
@@ -44,7 +40,7 @@ public class DatabaseContext : DbContext
             Console.WriteLine("Error connecting to database: " + e.Message);
             Environment.Exit(1);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Console.WriteLine("Error: " + e.Message);
             Environment.Exit(1);

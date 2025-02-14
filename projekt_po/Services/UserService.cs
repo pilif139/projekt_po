@@ -12,7 +12,7 @@ public class UserService : BaseService
     {
         _userRepository = userRepository;
     }
-    
+
     public void AddUser(string name, string surname, string password, Role role)
     {
         string hashedPassword = Hash.HashPassword(password);
@@ -20,7 +20,7 @@ public class UserService : BaseService
         Console.WriteLine("User added successfully.");
         Log($"User {name} {surname} with role {role} added.");
     }
-    
+
     public void DeleteUser(int id)
     {
         bool success = _userRepository.Delete(id);
@@ -35,7 +35,7 @@ public class UserService : BaseService
             Log($"Tried to delete non-existent user with {id} id.");
         }
     }
-    
+
     public User? GetUserById(int id)
     {
         var user = _userRepository.GetById(id);
