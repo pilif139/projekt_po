@@ -17,7 +17,7 @@ var services = new ServiceCollection();
 services.AddDbContext<DatabaseContext>(); // could be AddSingleton too
 services.AddSingleton(logger);
 services.AddSingleton<AuthService>();
-services.AddTransient<RbacService>();
+services.AddSingleton<IRbacService, RbacService>();
 services.AddTransient<IUserRepository, UserRepository>();
 services.AddTransient<UserService>();
 // add more services here like this: services.AddTransient<MyService1>();
@@ -31,6 +31,8 @@ if (userService == null)
 {
     throw new Exception("UserService not found in services collection.");
 }
+
+Console.WriteLine("Hello world!");
 
 userService.ListUsers();
 // under there will be defined menus and their options

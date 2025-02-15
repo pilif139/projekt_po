@@ -10,12 +10,14 @@
 
     <ItemGroup>
       <PackageReference Include="DotNetEnv" Version="3.1.1" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         <PrivateAssets>all</PrivateAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.1" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.2" />
       <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0-preview.2.efcore.9.0.0" />
+      <PackageReference Include="Spectre.Console" Version="0.49.1" />
+      <PackageReference Include="Spectre.Console.Cli" Version="0.49.1" />
       <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0" />
     </ItemGroup>
 
