@@ -18,7 +18,7 @@ public interface IRbacService
     bool CheckPermissions(Permissions permission);
 }
 
-public class RbacService : BaseService
+public class RbacService : BaseService, IRbacService
 {
     private readonly AuthService _authService;
     private readonly Dictionary<Role, Permissions> _rolePermissions = new()
