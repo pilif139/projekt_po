@@ -1,9 +1,13 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.ComponentModel.Design;
+using Microsoft.Extensions.DependencyInjection;
 using projekt_po.Database;
 using DotNetEnv;
+using projekt_po.Model;
 using projekt_po.Repository;
 using projekt_po.Services;
+using Spectre.Console;
 using projekt_po.Utils;
+
 
 // uses DotNetEnv package to load secret variables from .env files
 Env.Load();
@@ -31,8 +35,19 @@ if (userService == null)
 {
     throw new Exception("UserService not found in services collection.");
 }
+var authService = serviceProvider.GetService<AuthService>();
+if (authService == null)
+{
+    throw new Exception("AuthService not found in services collection.");
+    
+}
 
-Console.WriteLine("Hello world!");
+
+
 
 userService.ListUsers();
 // under there will be defined menus and their options
+
+userService.AddUser("Admin", "Admin", "Admin", Role.Admin);
+
+new UserMenu(userService,authService).ShowMenu(); //displays menu
