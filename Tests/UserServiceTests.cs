@@ -31,7 +31,7 @@ public class UserServiceTests : IDisposable
         string name = "John";
         string surname = "Doe";
         string password = "password";
-        Role role = Role.User;
+        Role role = Role.Admin;
 
         // Act
         _userService.AddUser(name, surname, password, role);
@@ -60,7 +60,7 @@ public class UserServiceTests : IDisposable
     {
         //Arrange
         int id = 1;
-        var expectedUser = new User("John", "Doe", "password", Role.User){Id = id};
+        var expectedUser = new User("John", "Doe", "password", Role.Admin){Id = id};
         _userRepositoryMock.Setup(repo => repo.GetById(id)).Returns(expectedUser);
         
         

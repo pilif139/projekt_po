@@ -9,6 +9,20 @@ namespace projekt_po.Database;
 public class DatabaseContext : DbContext
 {
     public DbSet<User> Users { get; init; }
+    public DbSet<Reservation> Reservations { get; init; }
+    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>()
+            .HasMany(u => u.Reservations)
+            .WithOne(r => r.User)
+            .HasForeignKey(r => r.UserId);
+        
+        modelBuilder.Entity<Reservation>()
+            .HasOne(r => r.User)
+            .WithMany(u => u.Reservations)
+            .HasForeignKey(r => r.UserId);
+    }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -45,6 +59,5 @@ public class DatabaseContext : DbContext
             Console.WriteLine("Error: " + e.Message);
             Environment.Exit(1);
         }
-
     }
 }

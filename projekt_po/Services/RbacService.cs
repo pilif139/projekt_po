@@ -24,7 +24,8 @@ public class RbacService : BaseService, IRbacService
     private readonly Dictionary<Role, Permissions> _rolePermissions = new()
     {
         {Role.Admin, Permissions.All},
-        {Role.User, Permissions.Read}
+        {Role.Worker, Permissions.Read | Permissions.Write},
+        {Role.Client, Permissions.Read}
     };
     
     public RbacService(AuthService authService, ILogger logger) : base(logger)

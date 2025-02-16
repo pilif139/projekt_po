@@ -50,7 +50,7 @@ while (showMenu)
         case Role.Admin:
             adminMenu.ShowAdminMenu();
             break;
-        case Role.User:
+        case Role.Client:
             userMenu.ShowUserMenu();
             break;
         default:

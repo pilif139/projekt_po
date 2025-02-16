@@ -60,7 +60,8 @@ public class AdminMenu
                 .AddChoices(new[]
                 {
                     Role.Admin,
-                    Role.User
+                    Role.Worker,
+                    Role.Client
                 }));
         _userService.AddUser(name, surname, password, role);
     }
