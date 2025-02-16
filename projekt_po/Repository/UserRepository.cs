@@ -6,7 +6,7 @@ namespace projekt_po.Repository;
 // interface for mocking UserRepository in tests
 public interface IUserRepository
 {
-    void Add(string name, string surname, string password, Role role);
+    User Add(string name, string surname, string password, Role role);
     User? GetById(int id);
     List<User> GetAll();
     List<User> GetAllByRole(Role role);
@@ -24,10 +24,11 @@ public class UserRepository : IUserRepository
         _db = db;
     }
     
-    public void Add(string name, string surname, string password, Role role)
+    public User Add(string name, string surname, string password, Role role)
     {
-        _db.Users.Add(new User(name, surname, password, role));
+        var user = _db.Users.Add(new User(name, surname, password, role));
         _db.SaveChanges();
+        return user.Entity;
     }
     
     public User? GetById(int id)

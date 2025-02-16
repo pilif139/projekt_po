@@ -61,9 +61,10 @@ public class AuthService : BaseService
 
         if (hasErrors) return;
         
-        _userRepository.Add(name, surname, hashedPassword, role);
+        var user = _userRepository.Add(name, surname, hashedPassword, role);
         Console.WriteLine("User added successfully.");
         Log($"User {name} {surname} with role {role} added.");
+        _loggedUser = user;
     }
     
     public Role GetLoggedUserRole()

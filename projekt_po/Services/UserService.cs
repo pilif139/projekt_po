@@ -31,7 +31,7 @@ public class UserService : BaseService
         bool success = _userRepository.Delete(id);
         if (success)
         {
-            Console.WriteLine("User deleted successfully.");
+            Console.WriteLine($"User with id {id} deleted successfully.");
             Log($"User with id {id} deleted.");
         }
         else
@@ -55,15 +55,17 @@ public class UserService : BaseService
         return user;
     }
 
-    public void ListUsers()
+    public List<User>? GetAllUsers()
     {
-        if(!_rbacService.CheckPermissions(Permissions.Read)) return;
+        if(!_rbacService.CheckPermissions(Permissions.Read)) return null;
         var users = _userRepository.GetAll();
-        AnsiConsole.Markup("[red]Users:\n[/]");
-        foreach (var user in users)
+        if (users.Count == 0)
         {
-            Console.WriteLine($"ID:{user.Id}.{user.Name} {user.Surname}, rola: {user.Role}");
+            Console.WriteLine("No users found.");
+            Log("GetAllUsers called, but no users found.");
+            return null;
         }
-        Log("List of users displayed.");
+        Log($"GetAllUsers called and found ${users.Count} users.");
+        return users;
     }
 }
