@@ -11,7 +11,7 @@ using projekt_po.Utils;
 
 // uses DotNetEnv package to load secret variables from .env files
 Env.Load();
-
+DotNetEnv.Env.Load();
 // defines services collection and adds DatabaseContext to it so every service like user, auth etc. will use
 // the same database connection.
 
@@ -48,6 +48,11 @@ if (authService == null)
 userService.ListUsers();
 // under there will be defined menus and their options
 
-userService.AddUser("Admin", "Admin", "Admin", Role.Admin);
+Console.WriteLine($"Server: {Environment.GetEnvironmentVariable("DB_SERVER")}");
+Console.WriteLine($"Port: {Environment.GetEnvironmentVariable("DB_PORT")}");
+Console.WriteLine($"User: {Environment.GetEnvironmentVariable("DB_USER")}");
+Console.WriteLine($"Password: {Environment.GetEnvironmentVariable("DB_PASSWORD")}");
+Console.WriteLine($"Database: {Environment.GetEnvironmentVariable("DB_NAME")}");
+
 
 new UserMenu(userService,authService).ShowMenu(); //displays menu

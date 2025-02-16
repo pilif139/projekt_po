@@ -1,6 +1,7 @@
 ﻿using projekt_po.Model;
 using projekt_po.Repository;
 using projekt_po.Utils;
+using Spectre.Console;
 
 namespace projekt_po.Services;
 
@@ -16,6 +17,7 @@ public class UserService : BaseService
 
     public void AddUser(string name, string surname, string password, Role role)
     {
+        
         if(!_rbacService.CheckPermissions(Permissions.Write)) return;
         string hashedPassword = Hash.HashPassword(password);
         _userRepository.Add(name, surname, hashedPassword, role);
@@ -57,7 +59,7 @@ public class UserService : BaseService
     {
         if(!_rbacService.CheckPermissions(Permissions.Read)) return;
         var users = _userRepository.GetAll();
-        Console.WriteLine("Users:");
+        AnsiConsole.Markup("[red]Users:\n[/]");
         foreach (var user in users)
         {
             Console.WriteLine($"ID:{user.Id}.{user.Name} {user.Surname}, rola: {user.Role}");
