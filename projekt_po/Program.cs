@@ -15,6 +15,7 @@ Env.Load();
 ILogger logger = new Logger("log.txt");
 
 var services = new ServiceCollection();
+services.AddTransient<ReservationRepository>();
 services.AddDbContext<DatabaseContext>(); // could be AddSingleton too
 services.AddSingleton(logger);
 services.AddSingleton<AuthService>();
@@ -29,6 +30,7 @@ var serviceProvider = services.BuildServiceProvider();
 // services collection and in the class constructor you can inject other services like UserRepository, DatabaseContext etc.
 var userService = serviceProvider.GetService<UserService>();
 var authService = serviceProvider.GetService<AuthService>();
+var reservationRepository = serviceProvider.GetService<ReservationRepository>();
 if(authService == null || userService == null)
 {
     throw new Exception("Services not found");
@@ -37,7 +39,7 @@ if(authService == null || userService == null)
 // under there will be defined menus and their options
 
 var authMenu = new AuthMenu(authService);
-var userMenu = new UserMenu(userService);
+var userMenu = new UserMenu(userService,authService,reservationRepository);
 var adminMenu = new AdminMenu(userService);
 
 bool showMenu = true;

@@ -37,8 +37,10 @@ public class AuthMenu
         }
     }
 
+    
     public bool Login()
     {
+        
         int triesLeft = 3;
         while (triesLeft > 0)
         {

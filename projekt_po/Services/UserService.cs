@@ -7,6 +7,8 @@ namespace projekt_po.Services;
 
 public class UserService : BaseService
 {
+    
+    
     private readonly IUserRepository _userRepository;
     private readonly IRbacService _rbacService;
     public UserService(IUserRepository userRepository, IRbacService rbacService, ILogger logger) : base(logger)
@@ -15,6 +17,7 @@ public class UserService : BaseService
         _rbacService = rbacService;
     }
 
+    
     public void AddUser(string name, string surname, string password, Role role)
     {
         
