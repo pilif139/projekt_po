@@ -1,7 +1,13 @@
-﻿namespace projekt_po.Services;
+﻿using projekt_po.Database;
+using projekt_po.Model;
+
+
+namespace projekt_po.Services;
 
 public class ReservationService
 {
+    
+    private readonly DatabaseContext _context;
     public int Id { get; set; } 
     public int UserId { get; set; }
     public string Details { get; set; }
@@ -18,5 +24,7 @@ public class ReservationService
         ReservationDate = reservationDate;
         DateOfReservation = dateOfReservation;
     }
+    
+
     
 }

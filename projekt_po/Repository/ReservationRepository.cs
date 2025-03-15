@@ -26,4 +26,18 @@ public class ReservationRepository
         Console.WriteLine("Reservation added successfully");
         return reservation;
     }
+
+    public Reservation Delete(int reservationId)
+    {
+        var reservation = _db.Reservations.Find(reservationId);
+        _db.Reservations.Remove(reservation);
+        _db.SaveChanges();
+        
+        return reservation;
+    }
+    public List<Reservation> GetReservations(int userId){
+        return _db.Reservations
+            .Where(r => r.UserId == userId)
+            .ToList();
+    }
 }
