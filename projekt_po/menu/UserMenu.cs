@@ -46,6 +46,7 @@ public class UserMenu
                      break;
                  case "Logout":
                      Console.WriteLine("Logging out...");
+                     
                      return;
              }
          }
@@ -72,10 +73,13 @@ public class UserMenu
                  .InstructionsText(
                      "[grey](Press [blue]<space>[/] to pick a reservation to delete, " + 
                      "[green]<enter>[/] to accept)[/]")
-                 .AddChoices(reservations));
-        
+                 .AddChoices(reservations)
+                 .UseConverter(rez=>$"reservation details: {rez.Details}, Date: {rez.Date}")
+             );
+         
          foreach (var rez in reservationsToDelete)
          {
+             Console.Write($"Your reservation details: {rez.Details}, Date: {rez.Date} - ");
              _reservationRepository.Delete(rez.Id);
          }
          if(reservationsToDelete.Count > 0)

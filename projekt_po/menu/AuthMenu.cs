@@ -31,6 +31,7 @@ public class AuthMenu
                 return Login();
             case "Exit":
                 Console.WriteLine("Thanks for using our system");
+                Environment.Exit(0);
                 return false;
             default:
                 return true;
