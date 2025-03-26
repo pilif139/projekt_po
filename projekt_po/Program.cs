@@ -16,7 +16,7 @@ ILogger logger = new Logger("log.txt");
 // defines services collection and adds DatabaseContext to it so every service like user, auth etc. will use
 // the same database connection.
 var services = new ServiceCollection();
-services.AddDbContext<DatabaseContext>();
+services.AddDbContext<DatabaseContext>(); // could be AddSingleton too
 services.AddSingleton(logger);
 
 // services and repositories
@@ -24,6 +24,8 @@ services.AddSingleton<IAuthService, AuthService>();
 services.AddSingleton<IRbacService, RbacService>();
 services.AddTransient<IUserRepository, UserRepository>();
 services.AddTransient<UserService>();
+services.AddTransient<IReservationRepository, ReservationRepository>();
+services.AddTransient<ReservationService>();
 
 // seeder
 services.AddSingleton<DatabaseSeeder>();
@@ -57,7 +59,6 @@ if (authMenu == null || userMenu == null || adminMenu == null || authService == 
 {
     throw new Exception("Services not found");
 }
-
 
 bool showMenu = true;
 while (showMenu)

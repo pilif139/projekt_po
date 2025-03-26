@@ -15,6 +15,7 @@ public class UserService : BaseService
         _rbacService = rbacService;
     }
 
+    
     public void AddUser(string name, string surname, string password, Role role)
     {
         
@@ -31,12 +32,12 @@ public class UserService : BaseService
         bool success = _userRepository.Delete(id);
         if (success)
         {
-            Console.WriteLine($"User with id {id} deleted successfully.");
+            AnsiConsole.WriteLine($"User with id {id} deleted successfully.");
             Log($"User with id {id} deleted.");
         }
         else
         {
-            Console.WriteLine("User not found.");
+            AnsiConsole.WriteLine("User not found.");
             Log($"Tried to delete non-existent user with {id} id.");
         }
     }
@@ -47,7 +48,7 @@ public class UserService : BaseService
         var user = _userRepository.GetById(id);
         if (user == null)
         {
-            Console.WriteLine("User not found");
+            AnsiConsole.WriteLine("User not found");
             Log($"User with id {id} not found.");
             return null;
         }
@@ -61,7 +62,7 @@ public class UserService : BaseService
         var users = _userRepository.GetAll();
         if (users.Count == 0)
         {
-            Console.WriteLine("No users found.");
+            AnsiConsole.WriteLine("No users found.");
             Log("GetAllUsers called, but no users found.");
             return null;
         }

@@ -2,7 +2,7 @@
 
 namespace projekt_po.Utils;
 
-public class StringUtils
+public static class StringUtils
 {
     public static bool AreStringsNullOrEmpty(params string?[] strings)
     {

@@ -7,7 +7,11 @@ public class Reservation
 {
     [Key]
     public int Id { get; set; }
+    
+    [Required]
     public DateTime Date { get; set; }
+    
+    [Required]
     public string Details { get; set; }
 
     [ForeignKey("User")]
@@ -31,5 +35,10 @@ public class Reservation
     public Reservation(DateTime date, string details, int userId, User user) : this(date, details, userId)
     {
         User = user;
+    }
+    
+    public override string ToString()
+    {
+        return $"Id: {Id}, Date: {Date}, Details: {Details}, UserId: {UserId}";
     }
 }
