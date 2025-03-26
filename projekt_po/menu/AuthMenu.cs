@@ -5,9 +5,9 @@ namespace projekt_po.Menu;
 
 public class AuthMenu
 {
-    private readonly AuthService _authService;
+    private readonly IAuthService _authService;
 
-    public AuthMenu(AuthService authService)
+    public AuthMenu(IAuthService authService)
     {
         _authService = authService;
     }
@@ -31,6 +31,7 @@ public class AuthMenu
                 return Login();
             case "Exit":
                 Console.WriteLine("Thanks for using our system");
+                // returns false to tell the loop to stop
                 return false;
             default:
                 return true;
