@@ -54,7 +54,7 @@ public class UserMenu
     {
         Console.Clear();
         int userId = _authService.GetLoggedUser()!.Id;
-        var reservations = _reservationService.GetReservations(userId);
+        var reservations = _reservationService.GetAllByUser(userId);
         if (reservations.Count == 0)
         {
             Console.WriteLine("No reservations to delete found.");
@@ -103,14 +103,13 @@ public class UserMenu
 
         while (!dateAvailable)
         {
-            reservationDate = Prompt.GetDate("Enter date of reservation (yyyy-mm-dd HH:mm): ");
+            reservationDate = Prompt.GetDate("Enter date of reservation: ");
 
             if (reservationDate < DateTime.Now)
             {
                 AnsiConsole.WriteLine("Date must be in the future.");
                 continue;
             }
-
             if (!_reservationService.CheckAvailability(reservationDate))
             {
                 AnsiConsole.WriteLine("Date is not available.");
@@ -121,15 +120,16 @@ public class UserMenu
         }
 
         var user = _authService.GetLoggedUser()!;
-        _reservationService.Add(user.Id, details, reservationDate);
+        _reservationService.Add(new Reservation(reservationDate, details, user.Id));
         AnsiConsole.WriteLine("Reservation added successfully.");
+        Task.Delay(2000).Wait();
     }
 
      private void ShowUserReservations()
      {
          Console.Clear();
          int userId = _authService.GetLoggedUser()!.Id;
-         var reservations = _reservationService.GetReservations(userId);
+         var reservations = _reservationService.GetAllByUser(userId);
          if (reservations.Count == 0)
          {
              Console.WriteLine("No reservations found.");

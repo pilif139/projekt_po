@@ -1,5 +1,6 @@
 ﻿using projekt_po.Model;
 using projekt_po.Services;
+using projekt_po.Utils;
 using Spectre.Console;
 
 namespace projekt_po.Menu;
@@ -8,10 +9,12 @@ public class AdminMenu
 {
     private readonly UserService _userService;
     private readonly IAuthService _authService;
-    public AdminMenu(UserService userService, IAuthService authService)
+    private readonly ReservationService _reservationService;
+    public AdminMenu(UserService userService, IAuthService authService, ReservationService reservationService)
     {
         _userService = userService;
         _authService = authService;
+        _reservationService = reservationService;
     }
 
     public void ShowAdminMenu() //function that shows admin menu
@@ -24,10 +27,13 @@ public class AdminMenu
                 .PageSize(10)
                 .AddChoices(new[]
                 {
-                     "Add user",
-                     "Delete user",
-                     "List of users",
-                     "Logout"
+                    "Add user",
+                    "Delete user",
+                    "List of users",
+                    "Add reservation",
+                    "Delete reservation",
+                    "List reservations",
+                    "Logout"
                 }));
             switch (option)
             {
@@ -35,16 +41,50 @@ public class AdminMenu
                     AddUser();
                     break;
                 case "Delete user":
-                    DeleteUser();
+                    DeleteList(_userService);
                     break;
                 case "List of users":
-                    ListUsers();
+                    List(_userService);
+                    break;
+                case "Add reservation":
+                    AddReservation();
+                    break;
+                case "Delete reservation":
+                    DeleteList(_reservationService);
+                    break;
+                case "List reservations":
+                    List(_reservationService);
                     break;
                 case "Logout":
                     _authService.Logout();
                     return;
             }
         }
+    }
+
+    private void AddReservation()
+    {
+        var clients = _userService.GetAllByRole(Role.Client);
+        if (clients == null || clients.Count == 0)
+        {
+            Console.WriteLine("No clients found.");
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            return;
+        }
+
+        var client = AnsiConsole.Prompt(
+            new SelectionPrompt<User>()
+                .Title("Choose client")
+                .PageSize(15)
+                .AddChoices(clients));
+
+        string details = Prompt.GetString("Enter reservation details: ");
+        DateTime date = Prompt.GetDate("Enter reservation date: ");
+        Reservation newReservation = new Reservation(date, details, client.Id);
+        _reservationService.Add(newReservation);
+        AnsiConsole.WriteLine("Reservation added successfully.");
+        Task.Delay(2000).Wait();
     }
 
     private void AddUser()
@@ -64,62 +104,67 @@ public class AdminMenu
                     Role.Worker,
                     Role.Client
                 }));
-        _userService.AddUser(name, surname, password, role);
+        User user = new User(name, surname, password, role);
+        _userService.Add(user);
+        AnsiConsole.WriteLine("User added successfully.");
+        Task.Delay(2000).Wait();
     }
 
-    private void DeleteUser()
+    private void DeleteList<T>(IModelService<T> service) where T : IModelType
     {
+        string modelName = typeof(T).Name;
         AnsiConsole.Clear();
-        var users = _userService.GetAllUsers();
-        if (users == null)
+        var values = service.GetAll();
+        if (values == null || values.Count == 0)
         {
-            Console.WriteLine("No users to delete found.");
+            Console.WriteLine("Nothing to delete.");
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
             return;
         }
-        var usersToDelete = AnsiConsole.Prompt(
-            new MultiSelectionPrompt<User>()
-                .Title("Choose users to delete")
+        var valuesToDelete = AnsiConsole.Prompt(
+            new MultiSelectionPrompt<T>()
+                .Title($"Choose {modelName}s to delete")
                 .NotRequired()
                 .PageSize(15)
                 .MoreChoicesText("[grey](Move up and down))[/]")
                 .InstructionsText(
                     "[grey](Press [blue]<space>[/] to pick a user to delete, " +
                     "[green]<enter>[/] to accept)[/]")
-                .AddChoices(users));
+                .AddChoices(values));
 
-        foreach (var user in usersToDelete)
+        foreach (var value in valuesToDelete)
         {
-            _userService.DeleteUser(user.Id);
+            service.Delete(value.Id);
         }
-        if (usersToDelete.Count > 0)
+        if (valuesToDelete.Count > 0)
         {
-            Console.WriteLine("Users deleted successfully.");
+            Console.WriteLine($"{modelName}s deleted successfully.");
         }
         else
         {
-            Console.WriteLine("No users deleted.");
+            Console.WriteLine($"No {modelName}s deleted.");
         }
 
         Console.WriteLine("Press any key to continue...");
         Console.ReadKey();
     }
 
-    private void ListUsers()
+    private void List<T>(IModelService<T> service) where T : IModelType
     {
         AnsiConsole.Clear();
-        var users = _userService.GetAllUsers();
-        AnsiConsole.Markup("[red]List of users[/]\n");
-        if (users == null)
+        string modelName = typeof(T).Name;
+        var models = service.GetAll();
+        AnsiConsole.Markup($"[red]List of {modelName}s[/]\n");
+        if (models == null)
         {
-            Console.WriteLine("No users found.");
+            Console.WriteLine($"No {modelName}s found.");
         }
         else
         {
-            foreach (var user in users)
+            foreach (var model in models)
             {
-                Console.WriteLine($"Id: {user.Id}, Name: {user.Name}, Surname: {user.Surname}, Role: {user.Role}");
+                Console.WriteLine(model);
             }
         }
 

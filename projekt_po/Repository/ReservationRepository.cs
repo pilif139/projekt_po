@@ -6,7 +6,8 @@ namespace projekt_po.Repository;
 public interface IReservationRepository
 {
     Reservation? Get(int reservationId);
-    List<Reservation> GetAll(int userId);
+    List<Reservation> GetAll();
+    List<Reservation> GetAllByUser(int userId);
     Reservation? GetByDate(DateTime date);
     Reservation Add(int userId, string details, DateTime reservationDate);
     bool Delete(int reservationId);
@@ -16,20 +17,25 @@ public class ReservationRepository : IReservationRepository
 {
     private readonly DatabaseContext _db;
 
-    public ReservationRepository(DatabaseContext db) 
+    public ReservationRepository(DatabaseContext db)
     {
         _db = db;
     }
-    
+
     public Reservation? Get(int reservationId)
     {
         return _db.Reservations.Find(reservationId);
     }
-    
-    public List<Reservation> GetAll(int userId){
+
+    public List<Reservation> GetAllByUser(int userId)
+    {
         return _db.Reservations
             .Where(r => r.UserId == userId)
             .ToList();
+    }
+    public List<Reservation> GetAll()
+    {
+        return _db.Reservations.ToList();
     }
 
     public Reservation? GetByDate(DateTime date)
@@ -43,12 +49,11 @@ public class ReservationRepository : IReservationRepository
         {
             UserId = userId,
             Details = details,
-            Date = reservationDate 
+            Date = reservationDate
         };
 
         _db.Reservations.Add(reservation);
         _db.SaveChanges();
-        Console.WriteLine("Reservation added successfully");
         return reservation;
     }
 
@@ -61,7 +66,7 @@ public class ReservationRepository : IReservationRepository
         }
         _db.Reservations.Remove(reservation);
         _db.SaveChanges();
-        
+
         return true;
     }
 }

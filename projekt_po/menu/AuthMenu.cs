@@ -34,7 +34,7 @@ public class AuthMenu
                 // returns false to tell the loop to stop
                 return false;
             default:
-                return true;
+                return false;
         }
     }
 
