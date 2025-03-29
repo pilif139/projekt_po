@@ -5,7 +5,7 @@ using Spectre.Console;
 
 namespace projekt_po.Services;
 
-public class UserService : BaseService
+public class UserService : BaseService, IModelService<User>
 {
     private readonly IUserRepository _userRepository;
     private readonly IRbacService _rbacService;
@@ -15,20 +15,19 @@ public class UserService : BaseService
         _rbacService = rbacService;
     }
 
-    
-    public void AddUser(string name, string surname, string password, Role role)
+
+    public void Add(User user)
     {
-        
-        if(!_rbacService.CheckPermissions(Permissions.Write)) return;
-        string hashedPassword = Hash.HashPassword(password);
-        _userRepository.Add(name, surname, hashedPassword, role);
-        Console.WriteLine("User added successfully.");
-        Log($"User {name} {surname} with role {role} added.");
+        if (!_rbacService.CheckPermission(Resource.User, Permission.Create)) return;
+        string hashedPassword = Hash.HashPassword(user.Password);
+        _userRepository.Add(user.Name, user.Surname, hashedPassword, user.Role);
+        AnsiConsole.WriteLine("User added successfully.");
+        Log($"User {user.Name} {user.Surname} with role {user.Role} added.");
     }
-    
-    public void DeleteUser(int id)
+
+    public void Delete(int id)
     {
-        if(!_rbacService.CheckPermissions(Permissions.Delete)) return;
+        if (!_rbacService.CheckPermission(Resource.User, Permission.Delete)) return;
         bool success = _userRepository.Delete(id);
         if (success)
         {
@@ -42,9 +41,9 @@ public class UserService : BaseService
         }
     }
 
-    public User? GetUserById(int id)
+    public User? GetById(int id)
     {
-        if(!_rbacService.CheckPermissions(Permissions.Read)) return null;
+        if (!_rbacService.CheckPermission(Resource.User, Permission.Read)) return null;
         var user = _userRepository.GetById(id);
         if (user == null)
         {
@@ -56,10 +55,24 @@ public class UserService : BaseService
         return user;
     }
 
-    public List<User>? GetAllUsers()
+    public List<User>? GetAll()
     {
-        if(!_rbacService.CheckPermissions(Permissions.Read)) return null;
+        if (!_rbacService.CheckPermission(Resource.User, Permission.Read)) return null;
         var users = _userRepository.GetAll();
+        if (users.Count == 0)
+        {
+            AnsiConsole.WriteLine("No users found.");
+            Log("GetAllUsers called, but no users found.");
+            return null;
+        }
+        Log($"GetAllUsers called and found ${users.Count} users.");
+        return users;
+    }
+
+    public List<User>? GetAllByRole(Role role)
+    {
+        if (!_rbacService.CheckPermission(Resource.User, Permission.Read)) return null;
+        var users = _userRepository.GetAllByRole(role);
         if (users.Count == 0)
         {
             AnsiConsole.WriteLine("No users found.");

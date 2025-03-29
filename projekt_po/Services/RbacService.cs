@@ -1,5 +1,6 @@
 ﻿using projekt_po.Model;
 using projekt_po.Utils;
+using Spectre.Console;
 
 namespace projekt_po.Services;
 
@@ -8,30 +9,62 @@ namespace projekt_po.Services;
 /// It is a flag enum, so it can be combined with bitwise OR operation.
 /// </summary>
 [Flags]
-public enum Permissions
+public enum Permission
 {
     None = 0,
     Read = 1,
-    Write = 2,
-    Delete = 4,
-    All = Read | Write | Delete
+    Create = 2,
+    Update = 4,
+    Delete = 8,
+    All = Read | Create | Update | Delete
+}
+
+public enum Resource
+{
+    User,
+    Reservation
 }
 
 public interface IRbacService
 {
-    bool CheckPermissions(Permissions permission);
+    bool CheckPermission(Resource resource, Permission permission);
+    bool CheckPermission<T>(Resource resource, Permission permission, T obj) where T : IModelType;
 }
 
 public class RbacService : BaseService, IRbacService
 {
     private readonly IAuthService _authService;
     // dictionary with roles and their permissions
-    private readonly Dictionary<Role, Permissions> _rolePermissions = new()
+    private readonly Dictionary<Role, Dictionary<Resource, Permission>> _rolePermissions = new()
     {
-        {Role.None, Permissions.None},
-        {Role.Admin, Permissions.All},
-        {Role.Worker, Permissions.Read | Permissions.Write},
-        {Role.Client, Permissions.Read}
+        {
+            Role.Admin, new Dictionary<Resource, Permission>
+            {
+                { Resource.User, Permission.All },
+                { Resource.Reservation, Permission.All }
+            }
+        },
+        {
+            Role.Worker, new Dictionary<Resource, Permission>
+            {
+                { Resource.User, Permission.Read },
+                { Resource.Reservation, Permission.All }
+            }
+        },
+        {
+            Role.Client, new Dictionary<Resource, Permission>
+            {
+                { Resource.User, Permission.Read },
+                { Resource.Reservation, Permission.Read | Permission.Create }
+            }
+        },
+        { 
+            Role.None, new Dictionary<Resource, Permission>
+            {
+                { Resource.User, Permission.None },
+                { Resource.Reservation, Permission.None }
+            }
+        }
     };
 
     public RbacService(IAuthService authService, ILogger logger) : base(logger)
@@ -40,11 +73,12 @@ public class RbacService : BaseService, IRbacService
     }
 
     /// <summary>
-    /// Checks if the current logged-in user has a role with the required permissions.
+    /// Checks if the current logged-in user has a role with the required permissions for specific resource like user or reservation.
     /// </summary>
-    /// <param name="permission">The permission from the Permissions enum.</param>
+    /// <param name="permission">The permission from the Permission enum.</param>
+    /// <param name="resource">The resource from the Resource enum.</param>
     /// <returns>True if the user has the required permissions, otherwise false.</returns>
-    public bool CheckPermissions(Permissions permission)
+    public bool CheckPermission(Resource resource, Permission permission)
     {
         if (!_authService.IsUserLogged())
         {
@@ -58,16 +92,45 @@ public class RbacService : BaseService, IRbacService
             Log($"Role {role} not found in permissions dictionary.");
             return false;
         }
-
-        // bitwise AND operation to check if user has required permissions
-        if ((_rolePermissions[role] & permission) == 0)
+        
+        if (_rolePermissions.TryGetValue(role, out var resourcePermissions) &&
+            resourcePermissions.TryGetValue(resource, out var allowedPermissions))
         {
-            Log($"User doesn't have required permissions to execute method.");
-            return false;
+            // Check if the requested permission is included in the allowed permissions
+            
+            return (allowedPermissions & permission) == permission;
         }
-
-        Log($"User has required permissions to execute method.");
-        return true;
+        
+        return false;
     }
 
+    /// <summary>
+    /// Checks if the current logged in user has permission for specific object.
+    /// <param name="resource">The resource from the Resource enum.</param>
+    /// <param name="permission">The permission from the Permission enum.</param>
+    /// <param name="obj">Object to check permissions for</param>
+    /// <returns>True if the user has the required permissions, otherwise false.</returns>
+    /// </summary>
+    public bool CheckPermission<T>(Resource resource, Permission permission, T obj) where T :IModelType
+    {
+        if (!CheckPermission(resource, permission))
+            return false;
+        
+        var loggedUser = _authService.GetLoggedUser();
+
+        if (loggedUser.Role == Role.Client)
+        {
+            if (obj is User user)
+            {
+                return loggedUser.Id == user.Id;
+            }
+            if (obj is Reservation reservation)
+            {
+                return loggedUser.Id == reservation.UserId;
+            }
+        }
+
+        return true;
+    }
+    
 }

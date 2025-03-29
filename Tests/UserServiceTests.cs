@@ -17,10 +17,10 @@ public class UserServiceTests : IDisposable
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _loggerMock = new Mock<ILogger>();
-        
+
         _rbacMock = new Mock<IRbacService>();
-        _rbacMock.Setup(rbac => rbac.CheckPermissions(It.IsAny<Permissions>())).Returns(true);
-        
+        _rbacMock.Setup(rbac => rbac.CheckPermission(It.IsAny<Resource>(), It.IsAny<Permission>())).Returns(true);
+
         _userService = new UserService(_userRepositoryMock.Object, _rbacMock.Object, _loggerMock.Object);
     }
 
@@ -28,17 +28,14 @@ public class UserServiceTests : IDisposable
     public void AddUser_ShouldAddUser()
     {
         //Arrange
-        string name = "John";
-        string surname = "Doe";
-        string password = "password";
-        Role role = Role.Admin;
+        User user = new User("John", "Doe", "password", Role.Admin);
 
         // Act
-        _userService.AddUser(name, surname, password, role);
+        _userService.Add(user);
 
         //Assert
-        _userRepositoryMock.Verify(repo => repo.Add(name, surname, It.IsAny<string>(), role), Times.Once);
-        _rbacMock.Verify(rbac => rbac.CheckPermissions(Permissions.Write), Times.Once);
+        _userRepositoryMock.Verify(repo => repo.Add(user.Name, user.Surname, It.IsAny<string>(), user.Role), Times.Once);
+        _rbacMock.Verify(rbac => rbac.CheckPermission(Resource.User, Permission.Create), Times.Once);
     }
 
     [Fact]
@@ -48,11 +45,11 @@ public class UserServiceTests : IDisposable
         int id = 1;
 
         // Act
-        _userService.DeleteUser(id);
+        _userService.Delete(id);
 
         //Assert
         _userRepositoryMock.Verify(repo => repo.Delete(id), Times.Once);
-        _rbacMock.Verify(rbac => rbac.CheckPermissions(Permissions.Delete), Times.Once);
+        _rbacMock.Verify(rbac => rbac.CheckPermission(Resource.User, Permission.Delete), Times.Once);
     }
 
     [Fact]
@@ -60,37 +57,37 @@ public class UserServiceTests : IDisposable
     {
         //Arrange
         int id = 1;
-        var expectedUser = new User("John", "Doe", "password", Role.Admin){Id = id};
+        var expectedUser = new User("John", "Doe", "password", Role.Admin) { Id = id };
         _userRepositoryMock.Setup(repo => repo.GetById(id)).Returns(expectedUser);
-        
-        
-        
+
+
+
         // Act
-        var result = _userService.GetUserById(id);
-        
+        var result = _userService.GetById(id);
+
         //Assert
         Assert.NotNull(result);
         Assert.Equal(expectedUser, result);
         _userRepositoryMock.Verify(repo => repo.GetById(id), Times.Once);
-        _rbacMock.Verify(rbac => rbac.CheckPermissions(Permissions.Read), Times.Once);
+        _rbacMock.Verify(rbac => rbac.CheckPermission(Resource.User,Permission.Read), Times.Once);
     }
-    
+
     [Fact]
     public void GetUserById_ShouldReturnNull()
     {
         //Arrange
         int id = 1;
         _userRepositoryMock.Setup(repo => repo.GetById(id)).Returns((User?)null);
-        
+
         // Act
-        var result = _userService.GetUserById(id);
-        
+        var result = _userService.GetById(id);
+
         //Assert
         Assert.Null(result);
         _userRepositoryMock.Verify(repo => repo.GetById(id), Times.Once);
-        _rbacMock.Verify(rbac => rbac.CheckPermissions(Permissions.Read), Times.Once);
+        _rbacMock.Verify(rbac => rbac.CheckPermission(Resource.User,Permission.Read), Times.Once);
     }
-    
+
     // runs after every test
     public void Dispose()
     {

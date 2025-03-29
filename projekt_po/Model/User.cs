@@ -1,8 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using projekt_po.Services;
 
 namespace projekt_po.Model;
 
-public class User
+public class User : IModelType
 {
     [Key]
     public int Id { get; set; }
