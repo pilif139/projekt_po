@@ -54,10 +54,10 @@ public class RbacService : BaseService, IRbacService
             Role.Client, new Dictionary<Resource, Permission>
             {
                 { Resource.User, Permission.Read },
-                { Resource.Reservation, Permission.Read | Permission.Create | Permission.Update | Permission.Delete } //only for his own resources
+                { Resource.Reservation, Permission.Read | Permission.Create }
             }
         },
-        { 
+        {
             Role.None, new Dictionary<Resource, Permission>
             {
                 { Resource.User, Permission.None },
@@ -91,7 +91,7 @@ public class RbacService : BaseService, IRbacService
             Log($"Role {role} not found in permissions dictionary.");
             return false;
         }
-        
+
         if (_rolePermissions.TryGetValue(role, out var resourcePermissions) &&
             resourcePermissions.TryGetValue(resource, out var allowedPermissions))
         {
@@ -118,14 +118,11 @@ public class RbacService : BaseService, IRbacService
     /// </summary>
     public bool CheckPermission<T>(Resource resource, Permission permission, T obj) where T : IModelType
     {
-        if (!CheckPermission(resource, permission))
-            return false;
-        
         var loggedUser = _authService.GetLoggedUser()!;
 
         if (loggedUser.Role != Role.Client)
         {
-            return true;
+            return CheckPermission(resource, permission);
         }
 
         switch (obj)
@@ -138,8 +135,8 @@ public class RbacService : BaseService, IRbacService
                 return loggedUser.Id == reservation.UserId;
         }
 
-        Log($"Object type {typeof(T)} not supported for permission check.");
+        Log($"User does not have permission: {permission}");
         return false;
     }
-    
+
 }
