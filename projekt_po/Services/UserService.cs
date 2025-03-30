@@ -21,7 +21,7 @@ public class UserService : BaseService, IModelService<User>
         if (!_rbacService.CheckPermission(Resource.User, Permission.Create)) return;
         string hashedPassword = Hash.HashPassword(user.Password);
         _userRepository.Add(user.Name, user.Surname, hashedPassword, user.Role);
-        AnsiConsole.WriteLine("User added successfully.");
+        AnsiConsole.MarkupLine("User added successfully.");
         Log($"User {user.Name} {user.Surname} with role {user.Role} added.");
     }
 
@@ -31,12 +31,12 @@ public class UserService : BaseService, IModelService<User>
         bool success = _userRepository.Delete(id);
         if (success)
         {
-            AnsiConsole.WriteLine($"User with id {id} deleted successfully.");
+            AnsiConsole.MarkupLine($"User with id {id} deleted successfully.");
             Log($"User with id {id} deleted.");
         }
         else
         {
-            AnsiConsole.WriteLine("User not found.");
+            AnsiConsole.MarkupLine("User not found.");
             Log($"Tried to delete non-existent user with {id} id.");
         }
     }
@@ -47,7 +47,7 @@ public class UserService : BaseService, IModelService<User>
         var user = _userRepository.GetById(id);
         if (user == null)
         {
-            AnsiConsole.WriteLine("User not found");
+            AnsiConsole.MarkupLine("User not found");
             Log($"User with id {id} not found.");
             return null;
         }
@@ -61,7 +61,7 @@ public class UserService : BaseService, IModelService<User>
         var users = _userRepository.GetAll();
         if (users.Count == 0)
         {
-            AnsiConsole.WriteLine("No users found.");
+            AnsiConsole.MarkupLine("No users found.");
             Log("GetAllUsers called, but no users found.");
             return null;
         }
@@ -75,7 +75,7 @@ public class UserService : BaseService, IModelService<User>
         var users = _userRepository.GetAllByRole(role);
         if (users.Count == 0)
         {
-            AnsiConsole.WriteLine("No users found.");
+            AnsiConsole.MarkupLine("No users found.");
             Log("GetAllUsers called, but no users found.");
             return null;
         }

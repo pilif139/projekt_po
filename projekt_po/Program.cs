@@ -32,7 +32,7 @@ services.AddSingleton<DatabaseSeeder>();
 
 //menus
 services.AddTransient<AuthMenu>();
-services.AddTransient<UserMenu>();
+services.AddTransient<ClientMenu>();
 services.AddTransient<AdminMenu>();
 // add more services here like this: services.AddTransient<MyService1>();
 
@@ -51,11 +51,11 @@ if (commandLineArgs.Contains("seed"))
 // get services like this: var service1 = serviceProvider.GetService<MyService1>(); where MyService1 is a class that you added to
 // services collection and in the class constructor you can inject other services like UserRepository, DatabaseContext etc.
 var authMenu = serviceProvider.GetService<AuthMenu>();
-var userMenu = serviceProvider.GetService<UserMenu>();
+var clientMenu = serviceProvider.GetService<ClientMenu>();
 var adminMenu = serviceProvider.GetService<AdminMenu>();
 var authService = serviceProvider.GetService<IAuthService>();
 
-if (authMenu == null || userMenu == null || adminMenu == null || authService == null)
+if (authMenu == null || clientMenu == null || adminMenu == null || authService == null)
 {
     throw new Exception("Services not found");
 }
@@ -65,16 +65,16 @@ while (showMenu)
 {
     Console.Clear();
     // auth menu is shown first and it returns true if user logs in successfully and false if user wants to exit the app
-    showMenu = authMenu.ShowMenu();
+    showMenu = authMenu.Show();
     //after logging in show menu based on user role
     var role = authService.GetLoggedUserRole();
     switch (role)
     {
         case Role.Admin:
-            adminMenu.ShowAdminMenu();
+            adminMenu.Show();
             break;
         case Role.Client:
-            userMenu.ShowUserMenu();
+            clientMenu.Show();
             break;
         case Role.Worker:
             // worker menu

@@ -5,18 +5,18 @@ using projekt_po.Utils;
 
 namespace projekt_po.Menu;
 
-public class UserMenu
+public class ClientMenu
 {
     private readonly IAuthService _authService;
     private readonly ReservationService _reservationService;
 
-    public UserMenu(IAuthService authService, ReservationService reservationService)
+    public ClientMenu(IAuthService authService, ReservationService reservationService)
     {
         _authService = authService;
         _reservationService = reservationService;
     }
 
-    public void ShowUserMenu()
+    public void Show()
     {
         Console.Clear();
         while (true)
@@ -55,10 +55,10 @@ public class UserMenu
         Console.Clear();
         int userId = _authService.GetLoggedUser()!.Id;
         var reservations = _reservationService.GetAllByUser(userId);
-        if (reservations.Count == 0)
+        if (reservations == null || reservations.Count == 0)
         {
-            Console.WriteLine("No reservations to delete found.");
-            Console.WriteLine("Press any key to continue...");
+            AnsiConsole.MarkupLine("[red]No reservations to delete found.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
             Console.ReadKey();
             return;
         }
@@ -73,7 +73,7 @@ public class UserMenu
                     "[grey](Press [blue]<space>[/] to pick a reservation to delete, " +
                     "[green]<enter>[/] to accept)[/]")
                 .AddChoices(reservations)
-                .UseConverter(rez => $"reservation details: {rez.Details}, Date: {rez.Date}")
+                .UseConverter(rez => $"reservation details:\n - {rez.Details},\n Date: {rez.Date}\n")
         );
 
         foreach (var res in reservationsToDelete)
@@ -81,16 +81,12 @@ public class UserMenu
             _reservationService.Delete(res.Id);
         }
 
-        if (reservationsToDelete.Count > 0)
+        if (reservationsToDelete.Count == 0)
         {
-            Console.WriteLine("Reservations deleted successfully.");
-        }
-        else
-        {
-            Console.WriteLine("No reservations deleted.");
+            AnsiConsole.MarkupLine("[red]Deleted 0 reservations.[/]");
         }
 
-        Console.WriteLine("Press any key to continue...");
+        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
         Console.ReadKey();
     }
 
@@ -107,41 +103,64 @@ public class UserMenu
 
             if (reservationDate < DateTime.Now)
             {
-                AnsiConsole.WriteLine("Date must be in the future.");
+                AnsiConsole.MarkupLine("[red]Date must be in the future.[/]");
                 continue;
             }
             if (!_reservationService.CheckAvailability(reservationDate))
             {
-                AnsiConsole.WriteLine("Date is not available.");
+                AnsiConsole.MarkupLine("[red]Date is not available.[/]");
                 continue;
             }
-            
+
             dateAvailable = true;
         }
 
         var user = _authService.GetLoggedUser()!;
         _reservationService.Add(new Reservation(reservationDate, details, user.Id));
-        AnsiConsole.WriteLine("Reservation added successfully.");
+        AnsiConsole.MarkupLine("[green]Reservation added successfully.[/]");
         Task.Delay(2000).Wait();
     }
 
-     private void ShowUserReservations()
-     {
-         Console.Clear();
-         int userId = _authService.GetLoggedUser()!.Id;
-         var reservations = _reservationService.GetAllByUser(userId);
-         if (reservations.Count == 0)
-         {
-             Console.WriteLine("No reservations found.");
-         }
-         else
-         {
-             foreach (var reservation in reservations)
-             {
-                 Console.WriteLine(reservation);
-             }
-         }
-         Console.WriteLine("Press any key to continue...");
-         Console.ReadKey();
-     }
+    private void ShowUserReservations()
+    {
+        Console.Clear();
+        int userId = _authService.GetLoggedUser()!.Id;
+        var reservations = _reservationService.GetAllByUser(userId);
+        if (reservations == null || reservations.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No reservations found.[/]");
+        }
+        else
+        {
+            var table = new Table();
+            AnsiConsole.Live(table)
+                .AutoClear(false)
+                .Overflow(VerticalOverflow.Ellipsis)
+                .Start(ctx =>
+                {
+                    table.AddColumn("[green bold]Id[/]");
+                    ctx.Refresh();
+                    Task.Delay(100).Wait();
+                    table.AddColumn("[dodgerblue2 bold]Details[/]");
+                    ctx.Refresh();
+                    Task.Delay(100).Wait();
+                    table.AddColumn("[blueviolet]Date[/]");
+                    ctx.Refresh();
+                    Task.Delay(100).Wait();
+
+                    foreach (var reservation in reservations)
+                    {
+                        table.AddRow(reservation.Id.ToString(), reservation.Details, reservation.Date.ToString());
+                        ctx.Refresh();
+                        Task.Delay(100).Wait();
+                    }
+                    
+                    table.Border(TableBorder.Rounded);
+                    ctx.Refresh();
+                    Task.Delay(100).Wait();
+                });
+        }
+        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+        Console.ReadKey();
+    }
 }

@@ -6,8 +6,8 @@ namespace projekt_po.Repository;
 public interface IReservationRepository
 {
     Reservation? Get(int reservationId);
-    List<Reservation> GetAll();
-    List<Reservation> GetAllByUser(int userId);
+    List<Reservation>? GetAll();
+    List<Reservation>? GetAllByUser(int userId);
     Reservation? GetByDate(DateTime date);
     Reservation Add(int userId, string details, DateTime reservationDate);
     bool Delete(int reservationId);

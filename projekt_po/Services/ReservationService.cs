@@ -21,7 +21,7 @@ public class ReservationService : BaseService, IModelService<Reservation>
     public Reservation? GetById(int id)
     {
         var reservation = _reservationRepository.Get(id);
-        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Read, reservation)) return new Reservation();
+        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Read, reservation)) return null;
         Log($"Getting reservation with id {id}.");
         return reservation;
     }
@@ -33,11 +33,12 @@ public class ReservationService : BaseService, IModelService<Reservation>
         return _reservationRepository.GetAll();
     }
 
-    public List<Reservation> GetAllByUser(int userId)
+    public List<Reservation>? GetAllByUser(int userId)
     {
         var reservations = _reservationRepository.GetAllByUser(userId);
+        if (reservations == null || reservations.Count == 0) return new List<Reservation>();
         if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Read, reservations[0])) return new List<Reservation>();
-        Log("Getting all reservations for user with id:"+ userId);
+        Log("Getting all reservations for user with id:" + userId);
         return reservations;
     }
 
@@ -49,23 +50,23 @@ public class ReservationService : BaseService, IModelService<Reservation>
         var user = _userService.GetById(reservation.UserId);
         if (user == null)
         {
-            AnsiConsole.WriteLine("User not found.");
+            AnsiConsole.MarkupLine("User not found.");
             Log($"Tried to add reservation for non-existent user with {reservation.UserId} id.");
             return;
         }
         // checks if the user has a client role
         if (user.Role != Role.Client)
         {
-            AnsiConsole.WriteLine("User is not a client.");
+            AnsiConsole.MarkupLine("User is not a client.");
             Log($"Tried to add reservation for user with {reservation.UserId} id that is not a client.");
             return;
         }
-        
+
         // checks if the date is available
         var existingReservation = _reservationRepository.GetByDate(reservation.Date);
         if (existingReservation != null)
         {
-            AnsiConsole.WriteLine("Date is not available.");
+            AnsiConsole.MarkupLine("Date is not available.");
             Log($"Tried to add reservation for date {reservation.Date} that is not available.");
             return;
         }
@@ -75,18 +76,17 @@ public class ReservationService : BaseService, IModelService<Reservation>
 
     public void Delete(int reservationId)
     {
-        if (!_rbacService.CheckPermission(Resource.Reservation,Permission.Delete)) return;
-        bool success = _reservationRepository.Delete(reservationId);
-        if (success)
+        var reservation = _reservationRepository.Get(reservationId);
+        if (reservation == null)
         {
-            AnsiConsole.WriteLine($"Reservation with id {reservationId} deleted successfully.");
-            Log($"Reservation with id {reservationId} deleted.");
-        }
-        else
-        {
-            AnsiConsole.WriteLine("Reservation not found.");
+            AnsiConsole.MarkupLine("Reservation not found.");
             Log($"Tried to delete non-existent reservation with {reservationId} id.");
+            return;
         }
+        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Delete, reservation)) return;
+        bool success = _reservationRepository.Delete(reservationId);
+        AnsiConsole.MarkupLine($"Reservation with id {reservationId} deleted successfully.");
+        Log($"Reservation with id {reservationId} deleted.");
     }
 
     public bool CheckAvailability(DateTime date)

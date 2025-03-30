@@ -17,7 +17,7 @@ public class AdminMenu
         _reservationService = reservationService;
     }
 
-    public void ShowAdminMenu() //function that shows admin menu
+    public void Show() //function that shows admin menu
     {
         while (true)
         {
@@ -67,8 +67,8 @@ public class AdminMenu
         var clients = _userService.GetAllByRole(Role.Client);
         if (clients == null || clients.Count == 0)
         {
-            Console.WriteLine("No clients found.");
-            Console.WriteLine("Press any key to continue...");
+            AnsiConsole.MarkupLine("[red]No clients found.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
             Console.ReadKey();
             return;
         }
@@ -83,14 +83,14 @@ public class AdminMenu
         DateTime date = Prompt.GetDate("Enter reservation date: ");
         Reservation newReservation = new Reservation(date, details, client.Id);
         _reservationService.Add(newReservation);
-        AnsiConsole.WriteLine("Reservation added successfully.");
+        AnsiConsole.MarkupLine("[green]Reservation added successfully.[/]");
         Task.Delay(2000).Wait();
     }
 
     private void AddUser()
     {
         AnsiConsole.Clear();
-        AnsiConsole.MarkupLine("[red]Creating new user[/]");
+        AnsiConsole.MarkupLine("[blue]Creating new user[/]");
         string name = AnsiConsole.Prompt(new TextPrompt<string>("Enter username: "));
         string surname = AnsiConsole.Prompt(new TextPrompt<string>("Enter surname: "));
         string password = AnsiConsole.Prompt(new TextPrompt<string>("Enter password: "));
@@ -106,7 +106,7 @@ public class AdminMenu
                 }));
         User user = new User(name, surname, password, role);
         _userService.Add(user);
-        AnsiConsole.WriteLine("User added successfully.");
+        AnsiConsole.MarkupLine("[green]User added successfully.[/]");
         Task.Delay(2000).Wait();
     }
 
@@ -117,8 +117,8 @@ public class AdminMenu
         var values = service.GetAll();
         if (values == null || values.Count == 0)
         {
-            Console.WriteLine("Nothing to delete.");
-            Console.WriteLine("Press any key to continue...");
+            AnsiConsole.MarkupLine("[red]Nothing to delete.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
             Console.ReadKey();
             return;
         }
@@ -139,14 +139,14 @@ public class AdminMenu
         }
         if (valuesToDelete.Count > 0)
         {
-            Console.WriteLine($"{modelName}s deleted successfully.");
+            AnsiConsole.MarkupLine($"[green]{modelName}s deleted successfully.");
         }
         else
         {
-            Console.WriteLine($"No {modelName}s deleted.");
+            AnsiConsole.MarkupLine($"[red]No {modelName}s deleted.");
         }
 
-        Console.WriteLine("Press any key to continue...");
+        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
         Console.ReadKey();
     }
 
@@ -155,20 +155,60 @@ public class AdminMenu
         AnsiConsole.Clear();
         string modelName = typeof(T).Name;
         var models = service.GetAll();
-        AnsiConsole.Markup($"[red]List of {modelName}s[/]\n");
+        AnsiConsole.Markup($"[blue]List of {modelName}s[/]\n");
         if (models == null)
         {
-            Console.WriteLine($"No {modelName}s found.");
+            AnsiConsole.MarkupLine($"[red]No {modelName}s found.[/]");
         }
         else
         {
-            foreach (var model in models)
-            {
-                Console.WriteLine(model);
-            }
-        }
+            var properties = typeof(T).GetProperties();
+        
+            // Utwórz tabelę i dodaj kolumny dla każdej właściwości
+            var table = new Table().Centered();
+            AnsiConsole.Live(table)
+                .AutoClear(false)
+                .Overflow(VerticalOverflow.Ellipsis)
+                .Cropping(VerticalOverflowCropping.Bottom)
+                .Start(ctx =>
+                {
+                    foreach (var prop in properties)
+                    {
+                        // Pomijamy właściwości typu ICollection i podobne
+                        if (!prop.PropertyType.IsGenericType && 
+                            !typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType) || 
+                            prop.PropertyType == typeof(string))
+                        {
+                            table.AddColumn($"[bold cyan1]{prop.Name}[/]");
+                            ctx.Refresh();
+                            Task.Delay(100).Wait();
+                        }
+                    }
+        
+                    // Dodaj dane dla każdego obiektu
+                    foreach (var model in models)
+                    {
+                        var rowData = new List<string>();
+                        foreach (var prop in properties)
+                        {
+                            // Pomijamy kolekcje
+                            if (!prop.PropertyType.IsGenericType && 
+                                !typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType) || 
+                                prop.PropertyType == typeof(string))
+                            {
+                                var value = prop.GetValue(model);
+                                rowData.Add(value?.ToString() ?? "");
+                            }
+                        }
+                        table.AddRow(rowData.ToArray());
+                        ctx.Refresh();
+                        Task.Delay(100).Wait();
+                    }
 
-        Console.WriteLine("\nPress any key to continue...");
+                    table.Border(TableBorder.Heavy);
+                });
+        }
+        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
         Console.ReadKey();
     }
 }

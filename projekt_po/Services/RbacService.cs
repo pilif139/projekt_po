@@ -55,7 +55,7 @@ public class RbacService : BaseService, IRbacService
             Role.Client, new Dictionary<Resource, Permission>
             {
                 { Resource.User, Permission.Read },
-                { Resource.Reservation, Permission.Read | Permission.Create }
+                { Resource.Reservation, Permission.Read | Permission.Create | Permission.Update | Permission.Delete }
             }
         },
         { 
@@ -96,11 +96,17 @@ public class RbacService : BaseService, IRbacService
         if (_rolePermissions.TryGetValue(role, out var resourcePermissions) &&
             resourcePermissions.TryGetValue(resource, out var allowedPermissions))
         {
-            // Check if the requested permission is included in the allowed permissions
-            
-            return (allowedPermissions & permission) == permission;
+            if ((allowedPermissions & permission) == permission)
+            {
+                Log("User has permission: " + permission);
+                return true;
+            }
+            Log("User does not have permission: " + permission);
         }
-        
+        else
+        {
+            Log($"Resource {resource} not found in permissions dictionary for role {role}.");
+        }
         return false;
     }
 
@@ -111,7 +117,7 @@ public class RbacService : BaseService, IRbacService
     /// <param name="obj">Object to check permissions for</param>
     /// <returns>True if the user has the required permissions, otherwise false.</returns>
     /// </summary>
-    public bool CheckPermission<T>(Resource resource, Permission permission, T obj) where T :IModelType
+    public bool CheckPermission<T>(Resource resource, Permission permission, T obj) where T : IModelType
     {
         if (!CheckPermission(resource, permission))
             return false;
@@ -128,6 +134,8 @@ public class RbacService : BaseService, IRbacService
             {
                 return loggedUser.Id == reservation.UserId;
             }
+
+            return false;
         }
 
         return true;

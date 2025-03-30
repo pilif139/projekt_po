@@ -1,4 +1,6 @@
-﻿using projekt_po.Services;
+﻿using projekt_po.Model;
+using projekt_po.Services;
+using projekt_po.Utils;
 using Spectre.Console;
 
 namespace projekt_po.Menu;
@@ -12,7 +14,7 @@ public class AuthMenu
         _authService = authService;
     }
 
-    public bool ShowMenu()
+    public bool Show()
     {
         Console.Clear();
         var menuOption = AnsiConsole.Prompt(
@@ -22,6 +24,7 @@ public class AuthMenu
                 .AddChoices(new[]
                 {
                     "Login",
+                    "Register as client",
                     "Exit"
                 }));
         switch (menuOption)
@@ -29,8 +32,12 @@ public class AuthMenu
             case "Login":
                 // if the login is succesful it will return true and the main loop in Program.cs will continue
                 return Login();
+            case "Register as client":
+                return Register();
             case "Exit":
-                Console.WriteLine("Thanks for using our system");
+                var text = new FigletText("Thanks for using our system!").Centered().Color(Color.Green);
+                    
+                AnsiConsole.Write(text);
                 // returns false to tell the loop to stop
                 return false;
             default:
@@ -51,11 +58,11 @@ public class AuthMenu
                 { 2, "yellow" },
                 { 1, "red" }
             };
-            AnsiConsole.MarkupLine($"[{triesLeftColor[triesLeft]}]Tries left: {triesLeft}[/]");
+            AnsiConsole.MarkupLine($"[rapidblink {triesLeftColor[triesLeft]}]Tries left: {triesLeft}[/]");
 
-            string name = AnsiConsole.Prompt(new TextPrompt<string>("Enter your username:"));
-            string surname = AnsiConsole.Prompt(new TextPrompt<string>("Enter your surname:"));
-            string password = AnsiConsole.Prompt(new TextPrompt<string>("Enter your password:").Secret()); // Secret() is for password inputs
+            string name = Prompt.GetString("Enter your name:");
+            string surname = Prompt.GetString("Enter your surname:");
+            string password = Prompt.GetString("Enter your password", isSecret: true);
             bool isAuthenticated = _authService.Authenticate(name, surname, password);
             if (isAuthenticated)
             {
@@ -68,5 +75,36 @@ public class AuthMenu
         }
 
         return false;
+    }
+
+    public bool Register()
+    {
+        while (true)
+        {
+            AnsiConsole.Clear();
+            AnsiConsole.MarkupLine("[blue]Register new client account[/]");
+            string name = Prompt.GetString("Enter your name:");
+            string surname = Prompt.GetString("Enter your surname:");
+            string password = Prompt.GetString("Enter your password", isSecret: true);
+            string passwordRepeat = Prompt.GetString("Repeat your password", isSecret: true);
+            if (password != passwordRepeat)
+            {
+                AnsiConsole.MarkupLine("[red]Passwords do not match[/]");
+                Task.Delay(2000).Wait();
+                continue;
+            }
+            if (_authService.Register(name, surname, password, Role.Client))
+            {
+                AnsiConsole.MarkupLine("[green]Account created successfully[/]");
+                Task.Delay(2000).Wait();
+                return true;
+            }
+            AnsiConsole.MarkupLine("[blue]Press any key to try again or backspace to go back to main menu.[/]");
+            char key = Console.ReadKey(true).KeyChar;
+            if (key == '\u0008') // backspace key
+            {
+                return false;
+            }
+        }
     }
 }
