@@ -1,6 +1,5 @@
 ﻿using projekt_po.Model;
 using projekt_po.Utils;
-using Spectre.Console;
 
 namespace projekt_po.Services;
 
@@ -55,7 +54,7 @@ public class RbacService : BaseService, IRbacService
             Role.Client, new Dictionary<Resource, Permission>
             {
                 { Resource.User, Permission.Read },
-                { Resource.Reservation, Permission.Read | Permission.Create | Permission.Update | Permission.Delete }
+                { Resource.Reservation, Permission.Read | Permission.Create | Permission.Update | Permission.Delete } //only for his own resources
             }
         },
         { 
@@ -122,23 +121,25 @@ public class RbacService : BaseService, IRbacService
         if (!CheckPermission(resource, permission))
             return false;
         
-        var loggedUser = _authService.GetLoggedUser();
+        var loggedUser = _authService.GetLoggedUser()!;
 
-        if (loggedUser.Role == Role.Client)
+        if (loggedUser.Role != Role.Client)
         {
-            if (obj is User user)
-            {
-                return loggedUser.Id == user.Id;
-            }
-            if (obj is Reservation reservation)
-            {
-                return loggedUser.Id == reservation.UserId;
-            }
-
-            return false;
+            return true;
         }
 
-        return true;
+        switch (obj)
+        {
+            case User user:
+                Log("Requested user: " + user.Id + " logged user: " + loggedUser.Id);
+                return loggedUser.Id == user.Id;
+            case Reservation reservation:
+                Log("Requested reservation: " + reservation.UserId + " logged user: " + loggedUser.Id);
+                return loggedUser.Id == reservation.UserId;
+        }
+
+        Log($"Object type {typeof(T)} not supported for permission check.");
+        return false;
     }
     
 }

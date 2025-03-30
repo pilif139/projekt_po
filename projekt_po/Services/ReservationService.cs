@@ -21,12 +21,18 @@ public class ReservationService : BaseService, IModelService<Reservation>
     public Reservation? GetById(int id)
     {
         var reservation = _reservationRepository.Get(id);
+        if (reservation == null)
+        {
+            AnsiConsole.MarkupLine("Reservation not found.");
+            Log($"Tried to get non-existent reservation with {id} id.");
+            return null;
+        }
         if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Read, reservation)) return null;
         Log($"Getting reservation with id {id}.");
         return reservation;
     }
 
-    public List<Reservation> GetAll()
+    public List<Reservation>? GetAll()
     {
         if (!_rbacService.CheckPermission(Resource.Reservation, Permission.All)) return new List<Reservation>();
         Log("Getting all reservations.");
@@ -74,19 +80,67 @@ public class ReservationService : BaseService, IModelService<Reservation>
         Log($"Reservation with id {newReservation.Id} added.");
     }
 
-    public void Delete(int reservationId)
+    public bool Delete(int reservationId)
     {
         var reservation = _reservationRepository.Get(reservationId);
         if (reservation == null)
         {
             AnsiConsole.MarkupLine("Reservation not found.");
             Log($"Tried to delete non-existent reservation with {reservationId} id.");
-            return;
+            return false;
         }
-        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Delete, reservation)) return;
+        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Delete, reservation)) return false;
         bool success = _reservationRepository.Delete(reservationId);
-        AnsiConsole.MarkupLine($"Reservation with id {reservationId} deleted successfully.");
-        Log($"Reservation with id {reservationId} deleted.");
+        if (success)
+        {
+            AnsiConsole.MarkupLine($"Reservation with id {reservationId} deleted successfully.");
+            Log($"Reservation with id {reservationId} deleted.");    
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("[red]Failed to delete reservation.[/]");
+            Log($"Failed to delete reservation with id {reservationId}.");
+        }
+        return success;
+    }
+    
+    public bool Update(Reservation reservation)
+    {
+        var existingReservation = _reservationRepository.Get(reservation.Id);
+        if (existingReservation == null)
+        {
+            AnsiConsole.MarkupLine("[red]Reservation not found.[/]");
+            Log($"Tried to update non-existent reservation with {reservation.Id} id.");
+            return false;
+        }
+        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Update, existingReservation)) return false;
+        // checks if the date is available
+        if (!CheckAvailability(reservation.Date))
+        {
+            AnsiConsole.MarkupLine("[red]Date is not available.[/]");
+            Log($"Tried to update reservation for date {reservation.Date} that is not available.");
+            return false;
+        }
+        if(reservation.UserId != existingReservation.UserId &&
+           _userService.GetById(reservation.UserId) == null)
+        {
+            AnsiConsole.MarkupLine("[red]User not found.[/]");
+            Log($"Tried to update reservation for non-existent user with {reservation.UserId} id.");
+            return false;
+        }
+        
+        bool success = _reservationRepository.Update(reservation);
+        if (success)
+        {
+            Log($"Reservation with id {reservation.Id} updated.");
+            AnsiConsole.MarkupLine($"[green]Reservation with id {reservation.Id} updated successfully.[/]");
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("[red]Failed to update reservation.[/]");
+            Log($"Failed to update reservation with id {reservation.Id}.");
+        }
+        return success;
     }
 
     public bool CheckAvailability(DateTime date)

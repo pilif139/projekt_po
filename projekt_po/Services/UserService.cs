@@ -25,9 +25,9 @@ public class UserService : BaseService, IModelService<User>
         Log($"User {user.Name} {user.Surname} with role {user.Role} added.");
     }
 
-    public void Delete(int id)
+    public bool Delete(int id)
     {
-        if (!_rbacService.CheckPermission(Resource.User, Permission.Delete)) return;
+        if (!_rbacService.CheckPermission(Resource.User, Permission.Delete)) return false;
         bool success = _userRepository.Delete(id);
         if (success)
         {
@@ -39,6 +39,35 @@ public class UserService : BaseService, IModelService<User>
             AnsiConsole.MarkupLine("User not found.");
             Log($"Tried to delete non-existent user with {id} id.");
         }
+
+        return success;
+    }
+
+    public bool Update(User user)
+    {
+        var existingUser = _userRepository.GetById(user.Id);
+        if (existingUser == null)
+        {
+            AnsiConsole.MarkupLine("User not found.");
+            Log($"Tried to update non-existent user with {user.Id} id.");
+            return false;
+        }
+        if (!_rbacService.CheckPermission(Resource.User, Permission.Update, existingUser)) return false;
+        string hashedPassword = Hash.HashPassword(user.Password);
+        user.Password = hashedPassword;
+        
+        bool success = _userRepository.Update(user);
+        if (success)
+        {
+            AnsiConsole.MarkupLine($"User with id {user.Id} updated successfully.");
+            Log($"User with id {user.Id} updated.");
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("User not found.");
+            Log($"Tried to update non-existent user with {user.Id} id.");
+        }
+        return success;
     }
 
     public User? GetById(int id)

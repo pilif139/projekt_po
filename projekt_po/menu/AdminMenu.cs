@@ -139,11 +139,11 @@ public class AdminMenu
         }
         if (valuesToDelete.Count > 0)
         {
-            AnsiConsole.MarkupLine($"[green]{modelName}s deleted successfully.");
+            AnsiConsole.MarkupLine($"[green]{modelName}s deleted successfully.[/]");
         }
         else
         {
-            AnsiConsole.MarkupLine($"[red]No {modelName}s deleted.");
+            AnsiConsole.MarkupLine($"[red]No {modelName}s deleted.[/]");
         }
 
         AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");

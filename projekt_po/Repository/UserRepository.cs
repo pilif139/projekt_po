@@ -12,6 +12,7 @@ public interface IUserRepository
     List<User> GetAllByRole(Role role);
     User? GetByNameAndSurname(string name, string surname);
     bool Delete(int id);
+    bool Update(User user);
 }
 
 // class that uses repository design pattern to seperate database logic from service logic
@@ -62,5 +63,25 @@ public class UserRepository : IUserRepository
         }
 
         return false;
+    }
+
+    public bool Update(User user)
+    {
+        var existingUser = _db.Users.Find(user.Id);
+        if (existingUser != null)
+        {
+            existingUser.Name = user.Name;
+            existingUser.Surname = user.Surname;
+            existingUser.Password = user.Password;
+            existingUser.Role = user.Role;
+            _db.SaveChanges();
+            return true;
+        }
+        return false;
+    }
+    
+    public void Dispose()
+    {
+        _db.Dispose();
     }
 }

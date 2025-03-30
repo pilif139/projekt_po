@@ -11,6 +11,7 @@ public interface IReservationRepository
     Reservation? GetByDate(DateTime date);
     Reservation Add(int userId, string details, DateTime reservationDate);
     bool Delete(int reservationId);
+    bool Update(Reservation reservation);
 }
 
 public class ReservationRepository : IReservationRepository
@@ -68,5 +69,19 @@ public class ReservationRepository : IReservationRepository
         _db.SaveChanges();
 
         return true;
+    }
+
+    public bool Update(Reservation reservation)
+    {
+        var existingReservation = _db.Reservations.Find(reservation.Id);
+        if (existingReservation != null)
+        {
+            existingReservation.UserId = reservation.UserId;
+            existingReservation.Details = reservation.Details;
+            existingReservation.Date = reservation.Date;
+            _db.SaveChanges();
+            return true;
+        }
+        return false;
     }
 }
