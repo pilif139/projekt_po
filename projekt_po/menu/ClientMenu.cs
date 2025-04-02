@@ -5,51 +5,20 @@ using projekt_po.Utils;
 
 namespace projekt_po.Menu;
 
-public class ClientMenu
+public class ClientMenu : BaseMenu
 {
     private readonly IAuthService _authService;
     private readonly ReservationService _reservationService;
 
-    public ClientMenu(IAuthService authService, ReservationService reservationService)
+    public ClientMenu(IAuthService authService, ReservationService reservationService) : base("Client menu",authService)
     {
         _authService = authService;
         _reservationService = reservationService;
+        AddMenuOption("Make reservation", MakeReservation);
+        AddMenuOption("Your reservations", ShowUserReservations);
+        AddMenuOption("Delete reservation", DeleteReservation);
     }
-
-    public void Show()
-    {
-        Console.Clear();
-        while (true)
-        {
-            Console.Clear();
-            var option = AnsiConsole.Prompt(new SelectionPrompt<string>()
-                .Title("[red]User menu[/]")
-                .PageSize(10)
-                .AddChoices(new[]
-                {
-                    "Make reservation",
-                    "Your reservations",
-                    "Delete reservation",
-                    "Logout"
-                }));
-            switch (option)
-            {
-                case "Make reservation":
-                    MakeReservation();
-                    break;
-                case "Your reservations":
-                    ShowUserReservations();
-                    break;
-                case "Delete reservation":
-                    DeleteReservation();
-                    break;
-                case "Logout":
-                    _authService.Logout();
-                    return;
-            }
-        }
-    }
-
+    
     private void DeleteReservation()
     {
         Console.Clear();
@@ -150,7 +119,7 @@ public class ClientMenu
 
                     foreach (var reservation in reservations)
                     {
-                        table.AddRow(reservation.Id.ToString(), reservation.Details, reservation.Date.ToString());
+                        table.AddRow(reservation.Id.ToString(), reservation.Details, reservation.Date.ToString("yyyy-MM-dd HH:mm:ss"));
                         ctx.Refresh();
                         Task.Delay(100).Wait();
                     }

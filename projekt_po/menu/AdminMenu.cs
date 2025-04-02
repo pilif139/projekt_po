@@ -5,61 +5,22 @@ using Spectre.Console;
 
 namespace projekt_po.Menu;
 
-public class AdminMenu
+public class AdminMenu : BaseMenu
 {
     private readonly UserService _userService;
     private readonly IAuthService _authService;
     private readonly ReservationService _reservationService;
-    public AdminMenu(UserService userService, IAuthService authService, ReservationService reservationService)
+    public AdminMenu(UserService userService, IAuthService authService, ReservationService reservationService) : base("Admin menu", authService)
     {
         _userService = userService;
         _authService = authService;
         _reservationService = reservationService;
-    }
-
-    public void Show() //function that shows admin menu
-    {
-        while (true)
-        {
-            AnsiConsole.Clear();
-            var option = AnsiConsole.Prompt(new SelectionPrompt<string>()
-                .Title("[red]Admin menu[/]")
-                .PageSize(10)
-                .AddChoices(new[]
-                {
-                    "Add user",
-                    "Delete user",
-                    "List of users",
-                    "Add reservation",
-                    "Delete reservation",
-                    "List reservations",
-                    "Logout"
-                }));
-            switch (option)
-            {
-                case "Add user":
-                    AddUser();
-                    break;
-                case "Delete user":
-                    DeleteList(_userService);
-                    break;
-                case "List of users":
-                    List(_userService);
-                    break;
-                case "Add reservation":
-                    AddReservation();
-                    break;
-                case "Delete reservation":
-                    DeleteList(_reservationService);
-                    break;
-                case "List reservations":
-                    List(_reservationService);
-                    break;
-                case "Logout":
-                    _authService.Logout();
-                    return;
-            }
-        }
+        AddMenuOption("Add user", AddUser);
+        AddMenuOption("Delete user", ()=>DeleteList(_userService));
+        AddMenuOption("List of users", ()=>List(_userService));
+        AddMenuOption("Add reservation", AddReservation);
+        AddMenuOption("Delete reservation", ()=>DeleteList(_reservationService));
+        AddMenuOption("List reservations", ()=>List(_reservationService));
     }
 
     private void AddReservation()
