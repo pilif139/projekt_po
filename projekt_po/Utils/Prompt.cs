@@ -2,14 +2,23 @@
 
 namespace projekt_po.Utils;
 
-public class Prompt
+public static class Prompt
 {
-    public static string GetString(string prompt, bool isSecret = false)
+    public static string GetString(string prompt,Func<string, bool>? regexFunc = null ,bool isSecret = false)
     {
         var textPrompt =
             new TextPrompt<string>(prompt.Length > 0 ? $"{prompt} " : "Enter a string:")
                 .InvalidChoiceMessage("String cannot be empty")
-                .PromptStyle("grey");
+                .PromptStyle("grey")
+                .Validate((val) =>
+                    {
+                        if (regexFunc == null || regexFunc(val))
+                        {
+                            return ValidationResult.Success();
+                        }
+                        return ValidationResult.Error("Invalid input.");
+                    }
+                );
 
         if (isSecret)
         {
