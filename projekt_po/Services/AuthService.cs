@@ -7,8 +7,8 @@ namespace projekt_po.Services;
 
 public interface IAuthService
 {
-    bool Authenticate(string name, string surname, string password);
-    bool Register(string name, string surname, string password, Role role);
+    bool Authenticate(string login, string password);
+    bool Register(string login,string name, string surname, string password, Role role);
     User? GetLoggedUser();
     Role GetLoggedUserRole();
     bool IsUserLogged();
@@ -25,59 +25,40 @@ public class AuthService : BaseService, IAuthService
         _userRepository = userRepository;
     }
 
-    public bool Authenticate(string name, string surname, string password)
+    public bool Authenticate(string login,string password)
     {
         // first checks if the user exists in the database
-        var user = _userRepository.GetByNameAndSurname(name, surname);
+        var user = _userRepository.GetByLogin(login);
         if (user == null)
         {
             AnsiConsole.MarkupLine("User not found.");
-            Log($"Tried to login with non-existent user {name} {surname}.");
+            Log($"Tried to login with non-existent user {login}.");
             return false;
         }
         // compare hashed password with the hased one in the database
         if (Hash.CompareHash(password, user.Password))
         {
             AnsiConsole.MarkupLine("Login successful.");
-            Log($"User {name} {surname} logged in.");
+            Log($"User {login} logged in.");
             _loggedUser = user;
             return true;
         }
         // else return false 
-        Log($"User {name} {surname} tried to login with wrong password.");
+        Log($"User {login} tried to login with wrong password.");
         return false;
     }
 
-    public bool Register(string name, string surname, string password, Role role)
+    public bool Register(string login,string name, string surname, string password, Role role)
     {
-        bool hasErrors = false;
-        string hashedPassword = Hash.HashPassword(password);
         // checks if user with the same name and surname already exists
-        if (_userRepository.GetByNameAndSurname(name, surname) != null)
+        if (!RegexCheck.IsValidLogin(login) || !RegexCheck.IsValidPassword(password) || !RegexCheck.IsValidNameAndSurname(name) || !RegexCheck.IsValidNameAndSurname(surname))
         {
-            AnsiConsole.MarkupLine("User already exists.");
-            Log($"Tried to register user {name} {surname} that already exists.");
+            Log("Tried to register with invalid data.");
             return false;
         }
-        // checks if name, surname and password are long enough
-        if (name.Length < 3 || surname.Length < 3 || password.Length < 8)
-        {
-            AnsiConsole.MarkupLine("Name and surname must be at least 3 characters long, password must be at least 8 characters long.");
-            Log($"Tried to register user {name} {surname} with too short name, surname or password.");
-            hasErrors = true;
-        }
-        // checks if password contains at least one special character
-        if (!StringUtils.ContainsSpecialCharacters(password))
-        {
-            AnsiConsole.MarkupLine("Password must contain at least one special character.");
-            Log($"Tried to register user {name} {surname} with password that doesn't contain special character.");
-            hasErrors = true;
-        }
-        // if there are any errors return
-        if (hasErrors) return false;
-
+        string hashedPassword = Hash.HashPassword(password);    
         // insert user into the database and set user context to the logged in user
-        var user = _userRepository.Add(name, surname, hashedPassword, role);
+        var user = _userRepository.Add(login, name, surname, hashedPassword, role);
         AnsiConsole.MarkupLine("User added successfully.");
         Log($"User {name} {surname} with role {role} added.");
         _loggedUser = user;

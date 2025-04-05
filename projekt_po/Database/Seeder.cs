@@ -1,17 +1,15 @@
-using System;
-using System.Linq;
 using Bogus;
-using Bogus.DataSets;
 using projekt_po.Model;
 using projekt_po.Utils;
+using Spectre.Console;
 
 namespace projekt_po.Database;
 
-public class DatabaseSeeder
+public class Seeder
 {
     private readonly DatabaseContext _context;
 
-    public DatabaseSeeder(DatabaseContext context)
+    public Seeder(DatabaseContext context)
     {
         _context = context;
     }
@@ -23,6 +21,7 @@ public class DatabaseSeeder
             .RuleFor(r => r.Details, f => f.Lorem.Sentences());
 
         var fakeUsers = new Faker<User>()
+            .RuleFor(u => u.Login, f => f.Internet.UserName())
             .RuleFor(u => u.Name, f => f.Name.FirstName())
             .RuleFor(u => u.Surname, f => f.Name.LastName())
             .RuleFor(u => u.Password, f =>
@@ -46,13 +45,21 @@ public class DatabaseSeeder
         _context.Users.AddRange(users);
 
         //exmaple admin user in dev environment
-        var adminUser = new User("Admin", "Admin", Hash.HashPassword("Admin"), Role.Admin);
-        _context.Users.Add(adminUser);
+        // prompt
+        bool createAdminUser = AnsiConsole.Prompt(
+            new ConfirmationPrompt("Do you want to create example admin user?"));
+        if (createAdminUser)
+        {
+            var adminUser = new User("Admin","Admin", "Admin", Hash.HashPassword("123"), Role.Admin);
+            _context.Users.Add(adminUser);
+            AnsiConsole.MarkupLine("[red]Added Admin user with login Admin and password 123[/]");    
+        }
+        
 
         _context.SaveChanges();
         foreach (var user in users)
         {
-            System.Console.WriteLine(user);
+            Console.WriteLine(user);
         }
     }
 }

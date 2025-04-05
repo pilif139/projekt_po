@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using projekt_po.Database;
 using DotNetEnv;
 using projekt_po.Menu;
@@ -27,8 +27,9 @@ services.AddTransient<UserService>();
 services.AddTransient<IReservationRepository, ReservationRepository>();
 services.AddTransient<ReservationService>();
 
-// seeder
-services.AddSingleton<DatabaseSeeder>();
+// database utils
+services.AddTransient<Seeder>();
+services.AddTransient<Cleaner>();
 
 //menus
 services.AddTransient<AuthMenu>();
@@ -42,9 +43,28 @@ var serviceProvider = services.BuildServiceProvider();
 var commandLineArgs = Environment.GetCommandLineArgs();
 if (commandLineArgs.Contains("seed"))
 {
-    var seeder = serviceProvider.GetService<DatabaseSeeder>()!;
+    var seeder = serviceProvider.GetService<Seeder>()!;
     seeder.Seed();
     Console.WriteLine("Database seeded successfully");
+    return;
+} 
+if (commandLineArgs.Contains("clean"))
+{
+    var cleaner = serviceProvider.GetService<Cleaner>()!;
+    if (commandLineArgs.Contains("--database"))
+    {
+        cleaner.CleanDatabase();
+    }
+    else if (commandLineArgs.Contains("--log"))
+    {
+        cleaner.CleanLogger();
+    }
+    else
+    {
+        cleaner.CleanDatabase();
+        cleaner.CleanLogger();
+    }
+
     return;
 }
 
