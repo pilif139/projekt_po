@@ -1,5 +1,6 @@
 ﻿using projekt_po.Model;
 using projekt_po.Utils;
+using Spectre.Console;
 
 namespace projekt_po.Services;
 
@@ -82,6 +83,9 @@ public class RbacService : BaseService, IRbacService
         if (!_authService.IsUserLogged())
         {
             Log("Checked permissions without logging in.");
+            AnsiConsole.MarkupLine("[red]You need to log in first.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
             return false;
         }
 
@@ -89,6 +93,9 @@ public class RbacService : BaseService, IRbacService
         if (!_rolePermissions.ContainsKey(role))
         {
             Log($"Role {role} not found in permissions dictionary.");
+            AnsiConsole.MarkupLine("[red]You do not have permission to perform this action.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
             return false;
         }
 
@@ -101,6 +108,9 @@ public class RbacService : BaseService, IRbacService
                 return true;
             }
             Log("User does not have permission: " + permission);
+            AnsiConsole.MarkupLine("[red]You do not have permission to perform this action.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
         }
         else
         {
@@ -129,8 +139,24 @@ public class RbacService : BaseService, IRbacService
         {
             case User user:
                 Log("Requested user: " + user.Id + " logged user: " + loggedUser.Id);
-                return loggedUser.Id == user.Id;
+                bool hasPermission = loggedUser.Id == user.Id;
+                if (!hasPermission)
+                {
+                    Log("User does not have permission: " + permission);
+                    AnsiConsole.MarkupLine("[red]You do not have permission to perform this action.[/]");
+                    AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+                    Console.ReadKey();
+                }
+                return hasPermission;
             case Reservation reservation:
+                hasPermission = loggedUser.Id == reservation.UserId;
+                if (!hasPermission)
+                {
+                    Log("User does not have permission: " + permission);
+                    AnsiConsole.MarkupLine("[red]You do not have permission to perform this action.[/]");
+                    AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+                    Console.ReadKey();
+                }
                 Log("Requested reservation: " + reservation.UserId + " logged user: " + loggedUser.Id);
                 return loggedUser.Id == reservation.UserId;
         }
