@@ -50,26 +50,44 @@ public class AdminMenu : BaseMenu
 
     private void AddUser()
     {
-        AnsiConsole.Clear();
-        AnsiConsole.MarkupLine("[blue]Creating new user[/]");
-        string login = Prompt.GetString("Enter your login:", RegexCheck.IsValidLogin);
-        string name = Prompt.GetString("Enter your name:", RegexCheck.IsValidNameAndSurname);
-        string surname = Prompt.GetString("Enter your surname:", RegexCheck.IsValidNameAndSurname);
-        string password = Prompt.GetString("Enter your password", RegexCheck.IsValidPassword, isSecret: true);
-        var role = AnsiConsole.Prompt(
-            new SelectionPrompt<Role>()
-                .Title("Choose role")
-                .PageSize(3)
-                .AddChoices(new[]
+        while (true)
+        {
+            AnsiConsole.Clear();
+            AnsiConsole.MarkupLine("[blue]Creating new user[/]");
+            string login = Prompt.GetString("Enter your login:", RegexCheck.IsValidLogin);
+            string name = Prompt.GetString("Enter your name:", RegexCheck.IsValidNameAndSurname);
+            string surname = Prompt.GetString("Enter your surname:", RegexCheck.IsValidNameAndSurname);
+            string password = Prompt.GetString("Enter your password", RegexCheck.IsValidPassword, isSecret: true);
+            var role = AnsiConsole.Prompt(
+                new SelectionPrompt<Role>()
+                    .Title("Choose role")
+                    .PageSize(3)
+                    .AddChoices(new[]
+                    {
+                        Role.Admin,
+                        Role.Worker,
+                        Role.Client
+                    }));
+            User user = new User(login, name, surname, password, role);
+            bool success = _userService.Add(user);
+            if (!success)
+            {
+                AnsiConsole.MarkupLine("[red]User not added.[/]");
+                AnsiConsole.MarkupLine("[yellow]Press any key to continue or backspace to go back to menu[/]");
+                var key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Backspace)
                 {
-                    Role.Admin,
-                    Role.Worker,
-                    Role.Client
-                }));
-        User user = new User(login, name, surname, password, role);
-        _userService.Add(user);
-        AnsiConsole.MarkupLine("[green]User added successfully.[/]");
-        Task.Delay(2000).Wait();
+                    return;
+                }
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[green]User added successfully.[/]");
+                AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+                Console.ReadKey();
+                return;
+            }
+        }
     }
 
     private void DeleteList<T>(IModelService<T> service) where T : IModelType

@@ -19,6 +19,20 @@ public class UserService : BaseService, IModelService<User>
     public bool Add(User user)
     {
         if (!_rbacService.CheckPermission(Resource.User, Permission.Create)) return false;
+        //chceck if user with this login already exists
+        if (_userRepository.GetByLogin(user.Login) != null)
+        {
+            AnsiConsole.MarkupLine("User with this login already exists.");
+            Log($"Tried to add user with existing login {user.Login}.");
+            return false;
+        }
+        // validation of user fields
+        if(!RegexCheck.IsValidLogin(user.Login) || !RegexCheck.IsValidPassword(user.Password) || !RegexCheck.IsValidNameAndSurname(user.Name) || !RegexCheck.IsValidNameAndSurname(user.Surname))
+        {
+            AnsiConsole.MarkupLine("Invalid user data.");
+            Log($"Tried to add user with invalid data: {user.Login}, {user.Name}, {user.Surname}.");
+            return false;
+        }
         string hashedPassword = Hash.HashPassword(user.Password);
         _userRepository.Add(user.Login,user.Name, user.Surname, hashedPassword, user.Role);
         AnsiConsole.MarkupLine("User added successfully.");

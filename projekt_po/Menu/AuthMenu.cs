@@ -45,7 +45,7 @@ public class AuthMenu
         }
     }
 
-    public bool Login()
+    private bool Login()
     {
         int triesLeft = 3;
         while (triesLeft > 0)
@@ -78,7 +78,7 @@ public class AuthMenu
         return false;
     }
 
-    public bool Register()
+    private bool Register()
     {
         while (true)
         {
@@ -102,8 +102,8 @@ public class AuthMenu
                 return true;
             }
             AnsiConsole.MarkupLine("[blue]Press any key to try again or backspace to go back to main menu.[/]");
-            char key = Console.ReadKey(true).KeyChar;
-            if (key == '\u0008') // backspace key
+            var key = Console.ReadKey(true);
+            if (key.Key == ConsoleKey.Backspace)
             {
                 return false;
             }
