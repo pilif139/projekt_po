@@ -2,7 +2,7 @@ namespace projekt_po.Services
 {
     public interface IModelService<T> where T : IModelType//interface for model services
     {
-        public void Add(T model);
+        public bool Add(T model);
         public bool Delete(int id);
         public bool Update(T model);
         public T? GetById(int id);

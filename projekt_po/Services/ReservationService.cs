@@ -48,24 +48,23 @@ public class ReservationService : BaseService, IModelService<Reservation>
         return reservations;
     }
 
-    public void Add(Reservation reservation)
+    public bool Add(Reservation reservation)
     {
-        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Create)) return;
-
+        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Create)) return false;
         // checks if user exists
         var user = _userService.GetById(reservation.UserId);
         if (user == null)
         {
             AnsiConsole.MarkupLine("User not found.");
             Log($"Tried to add reservation for non-existent user with {reservation.UserId} id.");
-            return;
+            return false;
         }
         // checks if the user has a client role
         if (user.Role != Role.Client)
         {
             AnsiConsole.MarkupLine("User is not a client.");
             Log($"Tried to add reservation for user with {reservation.UserId} id that is not a client.");
-            return;
+            return false;
         }
 
         // checks if the date is available
@@ -74,10 +73,11 @@ public class ReservationService : BaseService, IModelService<Reservation>
         {
             AnsiConsole.MarkupLine("Date is not available.");
             Log($"Tried to add reservation for date {reservation.Date} that is not available.");
-            return;
+            return false;
         }
         var newReservation = _reservationRepository.Add(reservation.UserId, reservation.Details, reservation.Date);
         Log($"Reservation with id {newReservation.Id} added.");
+        return true;
     }
 
     public bool Delete(int reservationId)
@@ -94,7 +94,7 @@ public class ReservationService : BaseService, IModelService<Reservation>
         if (success)
         {
             AnsiConsole.MarkupLine($"Reservation with id {reservationId} deleted successfully.");
-            Log($"Reservation with id {reservationId} deleted.");    
+            Log($"Reservation with id {reservationId} deleted.");
         }
         else
         {
@@ -103,7 +103,7 @@ public class ReservationService : BaseService, IModelService<Reservation>
         }
         return success;
     }
-    
+
     public bool Update(Reservation reservation)
     {
         var existingReservation = _reservationRepository.Get(reservation.Id);
@@ -121,14 +121,14 @@ public class ReservationService : BaseService, IModelService<Reservation>
             Log($"Tried to update reservation for date {reservation.Date} that is not available.");
             return false;
         }
-        if(reservation.UserId != existingReservation.UserId &&
+        if (reservation.UserId != existingReservation.UserId &&
            _userService.GetById(reservation.UserId) == null)
         {
             AnsiConsole.MarkupLine("[red]User not found.[/]");
             Log($"Tried to update reservation for non-existent user with {reservation.UserId} id.");
             return false;
         }
-        
+
         bool success = _reservationRepository.Update(reservation);
         if (success)
         {

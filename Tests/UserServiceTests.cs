@@ -28,13 +28,13 @@ public class UserServiceTests : IDisposable
     public void AddUser_ShouldAddUser()
     {
         //Arrange
-        User user = new User("John", "Doe", "password", Role.Admin);
+        User user = new User("JohnDoe","John", "Doe", "password", Role.Admin);
 
         // Act
         _userService.Add(user);
 
         //Assert
-        _userRepositoryMock.Verify(repo => repo.Add(user.Name, user.Surname, It.IsAny<string>(), user.Role), Times.Once);
+        _userRepositoryMock.Verify(repo => repo.Add(user.Login,user.Name, user.Surname, It.IsAny<string>(), user.Role), Times.Once);
         _rbacMock.Verify(rbac => rbac.CheckPermission(Resource.User, Permission.Create), Times.Once);
     }
 
@@ -57,7 +57,7 @@ public class UserServiceTests : IDisposable
     {
         //Arrange
         int id = 1;
-        var expectedUser = new User("John", "Doe", "password", Role.Admin) { Id = id };
+        var expectedUser = new User("JohnDoe","John", "Doe", "password", Role.Admin) { Id = id };
         _userRepositoryMock.Setup(repo => repo.GetById(id)).Returns(expectedUser);
 
 

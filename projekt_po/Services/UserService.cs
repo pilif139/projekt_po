@@ -16,13 +16,14 @@ public class UserService : BaseService, IModelService<User>
     }
 
 
-    public void Add(User user)
+    public bool Add(User user)
     {
-        if (!_rbacService.CheckPermission(Resource.User, Permission.Create)) return;
+        if (!_rbacService.CheckPermission(Resource.User, Permission.Create)) return false;
         string hashedPassword = Hash.HashPassword(user.Password);
-        _userRepository.Add(user.Name, user.Surname, hashedPassword, user.Role);
+        _userRepository.Add(user.Login,user.Name, user.Surname, hashedPassword, user.Role);
         AnsiConsole.MarkupLine("User added successfully.");
         Log($"User {user.Name} {user.Surname} with role {user.Role} added.");
+        return true;
     }
 
     public bool Delete(int id)
@@ -55,7 +56,7 @@ public class UserService : BaseService, IModelService<User>
         if (!_rbacService.CheckPermission(Resource.User, Permission.Update, existingUser)) return false;
         string hashedPassword = Hash.HashPassword(user.Password);
         user.Password = hashedPassword;
-        
+
         bool success = _userRepository.Update(user);
         if (success)
         {

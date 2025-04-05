@@ -6,11 +6,12 @@ namespace projekt_po.Repository;
 // interface for mocking UserRepository in tests
 public interface IUserRepository
 {
-    User Add(string name, string surname, string password, Role role);
+    User Add(string login,string name, string surname, string password, Role role);
     User? GetById(int id);
     List<User> GetAll();
     List<User> GetAllByRole(Role role);
     User? GetByNameAndSurname(string name, string surname);
+    User? GetByLogin(string login);
     bool Delete(int id);
     bool Update(User user);
 }
@@ -25,9 +26,9 @@ public class UserRepository : IUserRepository
         _db = db;
     }
     
-    public User Add(string name, string surname, string password, Role role)
+    public User Add(string login,string name, string surname, string password, Role role)
     {
-        var user = _db.Users.Add(new User(name, surname, password, role));
+        var user = _db.Users.Add(new User(login,name, surname, password, role));
         _db.SaveChanges();
         return user.Entity;
     }
@@ -45,6 +46,11 @@ public class UserRepository : IUserRepository
     public List<User> GetAllByRole(Role role)
     {
         return _db.Users.Where(u => u.Role == role).ToList();
+    }
+    
+    public User? GetByLogin(string login)
+    {
+        return _db.Users.FirstOrDefault(u => u.Login == login);
     }
     
     public User? GetByNameAndSurname(string name, string surname)
