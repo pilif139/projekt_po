@@ -8,11 +8,13 @@ namespace projekt_po.Menu;
 public class AdminMenu : BaseMenu
 {
     private readonly UserService _userService;
+    private readonly LaneService _laneService;
     private readonly IAuthService _authService;
     private readonly ReservationService _reservationService;
-    public AdminMenu(UserService userService, IAuthService authService, ReservationService reservationService) : base("Admin menu", authService)
+    public AdminMenu(UserService userService, LaneService laneService, IAuthService authService, ReservationService reservationService) : base("Admin menu", authService)
     {
         _userService = userService;
+        _laneService = laneService;
         _authService = authService;
         _reservationService = reservationService;
         AddMenuOption("Add user", AddUser);
@@ -33,16 +35,22 @@ public class AdminMenu : BaseMenu
             Console.ReadKey();
             return;
         }
+        
+        var lanes = _laneService.GetAvailable();
+        if (lanes == null || lanes.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No available lanes found.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
+            return;
+        }
 
-        var client = AnsiConsole.Prompt(
-            new SelectionPrompt<User>()
-                .Title("Choose client")
-                .PageSize(15)
-                .AddChoices(clients));
-
+        var client = Prompt.SelectFromList("Choose client", clients);
+        var lane = Prompt.SelectFromList("Choose lane", lanes);
+        
         string details = Prompt.GetString("Enter reservation details: ");
         DateTime date = Prompt.GetDate("Enter reservation date: ");
-        Reservation newReservation = new Reservation(date, details, client.Id);
+        Reservation newReservation = new Reservation(date, details, client.Id, lane.Id);
         _reservationService.Add(newReservation);
         AnsiConsole.MarkupLine("[green]Reservation added successfully.[/]");
         Task.Delay(2000).Wait();

@@ -7,6 +7,7 @@ namespace projekt_po.Services;
 
 public class UserService : BaseService, IModelService<User>
 {
+    private const Resource Resource = Services.Resource.User;
     private readonly IUserRepository _userRepository;
     private readonly IRbacService _rbacService;
     public UserService(IUserRepository userRepository, IRbacService rbacService, ILogger logger) : base(logger)
@@ -18,7 +19,7 @@ public class UserService : BaseService, IModelService<User>
 
     public bool Add(User user)
     {
-        if (!_rbacService.CheckPermission(Resource.User, Permission.Create)) return false;
+        if (!_rbacService.CheckPermission(Resource, Permission.Create)) return false;
         //chceck if user with this login already exists
         if (_userRepository.GetByLogin(user.Login) != null)
         {
@@ -42,7 +43,7 @@ public class UserService : BaseService, IModelService<User>
 
     public bool Delete(int id)
     {
-        if (!_rbacService.CheckPermission(Resource.User, Permission.Delete)) return false;
+        if (!_rbacService.CheckPermission(Resource, Permission.Delete)) return false;
         bool success = _userRepository.Delete(id);
         if (success)
         {
@@ -67,7 +68,7 @@ public class UserService : BaseService, IModelService<User>
             Log($"Tried to update non-existent user with {user.Id} id.");
             return false;
         }
-        if (!_rbacService.CheckPermission(Resource.User, Permission.Update, existingUser)) return false;
+        if (!_rbacService.CheckPermission(Resource, Permission.Update, existingUser)) return false;
         string hashedPassword = Hash.HashPassword(user.Password);
         user.Password = hashedPassword;
 
@@ -87,7 +88,7 @@ public class UserService : BaseService, IModelService<User>
 
     public User? GetById(int id)
     {
-        if (!_rbacService.CheckPermission(Resource.User, Permission.Read)) return null;
+        if (!_rbacService.CheckPermission(Resource, Permission.Read)) return null;
         var user = _userRepository.GetById(id);
         if (user == null)
         {
@@ -101,7 +102,7 @@ public class UserService : BaseService, IModelService<User>
 
     public List<User>? GetAll()
     {
-        if (!_rbacService.CheckPermission(Resource.User, Permission.Read)) return null;
+        if (!_rbacService.CheckPermission(Resource, Permission.Read)) return null;
         var users = _userRepository.GetAll();
         if (users.Count == 0)
         {
@@ -115,7 +116,7 @@ public class UserService : BaseService, IModelService<User>
 
     public List<User>? GetAllByRole(Role role)
     {
-        if (!_rbacService.CheckPermission(Resource.User, Permission.Read)) return null;
+        if (!_rbacService.CheckPermission(Resource, Permission.Read)) return null;
         var users = _userRepository.GetAllByRole(role);
         if (users.Count == 0)
         {

@@ -26,6 +26,22 @@ public static class Prompt
         }
         return AnsiConsole.Prompt(textPrompt);
     }
+
+    public static T SelectFromList<T>(string prompt, List<T> list) where T : class
+    {
+        if (list.Count == 0)
+        {
+            throw new ArgumentException("List cannot be empty");
+        }
+        var selected = AnsiConsole.Prompt(
+            new SelectionPrompt<T>()
+                .Title(prompt)
+                .PageSize(15)
+                .MoreChoicesText("[grey](Move up and down)[/]")
+                .AddChoices(list)
+            );
+        return selected;
+    }
     
     public static DateTime GetDate(string prompt)
     {

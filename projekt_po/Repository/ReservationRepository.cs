@@ -9,6 +9,7 @@ public interface IReservationRepository
     List<Reservation>? GetAll();
     List<Reservation>? GetAllByUser(int userId);
     Reservation? GetByDate(DateTime date);
+    List<Reservation>? GetByLane(int laneId);
     Reservation Add(int userId, string details, DateTime reservationDate);
     bool Delete(int reservationId);
     bool Update(Reservation reservation);
@@ -43,6 +44,13 @@ public class ReservationRepository : IReservationRepository
     {
         return _db.Reservations.FirstOrDefault(r => r.Date == date);
     }
+    
+    public List<Reservation> GetByLane(int laneId)
+    {
+        return _db.Reservations
+            .Where(r => r.LaneId == laneId)
+            .ToList();
+    }
 
     public Reservation Add(int userId, string details, DateTime reservationDate)
     {
@@ -74,14 +82,14 @@ public class ReservationRepository : IReservationRepository
     public bool Update(Reservation reservation)
     {
         var existingReservation = _db.Reservations.Find(reservation.Id);
-        if (existingReservation != null)
+        if (existingReservation == null)
         {
-            existingReservation.UserId = reservation.UserId;
-            existingReservation.Details = reservation.Details;
-            existingReservation.Date = reservation.Date;
-            _db.SaveChanges();
-            return true;
+            return false;
         }
-        return false;
+        existingReservation.UserId = reservation.UserId;
+        existingReservation.Details = reservation.Details;
+        existingReservation.Date = reservation.Date;
+        _db.SaveChanges();
+        return true;
     }
 }
