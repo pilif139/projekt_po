@@ -13,6 +13,7 @@ public class Reservation : IModelType
     public DateTime Date { get; set; }
 
     [Required]
+    [StringLength(100)]
     public string Details { get; set; }
 
     [ForeignKey("User")]

@@ -39,7 +39,7 @@ public class Lane : IModelType
     [NotMapped]
     public string FormattedPrice => Price.ToString("C", CultureInfo.CurrentCulture);
 
-    public List<Reservation> Reservations { get; set; } = new List<Reservation>();
+    public List<Reservation> Reservations { get; set ; } = new List<Reservation>();
 
     public Lane()
     {

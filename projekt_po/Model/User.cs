@@ -8,10 +8,19 @@ public class User : IModelType
 {
     [Key]
     public int Id { get; set; }
-
+    
+    [Required]
+    [StringLength(50)]
     public string Login { get; set; }
+    
+    [Required]
+    [StringLength(50)]
     public string Name { get; set; }
+    [Required]
+    [StringLength(50)]
     public string Surname { get; set; }
+    [Required]
+    [StringLength(44)] // Base64 string length for 32 bytes
     public string Password { get; set; }
     public Role Role { get; set; }
     public List<Reservation> Reservations { get; set; } = new List<Reservation>();
