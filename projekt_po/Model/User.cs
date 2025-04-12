@@ -24,6 +24,8 @@ public class User : IModelType
     public string Password { get; set; }
     public Role Role { get; set; }
     public List<Reservation> Reservations { get; set; } = new List<Reservation>();
+    // lanes only for users with worker role
+    public List<Lane> Lanes { get; set; } = new List<Lane>();
 
     public User(string login,string name, string surname, string password, Role role)
     {
