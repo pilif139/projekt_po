@@ -31,7 +31,7 @@ public class LaneRepository : ILaneRepository
 
     public List<Lane> GetAll()
     {
-        return _db.Lanes.ToList();
+        return _db.Lanes.OrderBy(x => x.Id).ToList();
     }
 
     public Lane? GetByNumber(int number)

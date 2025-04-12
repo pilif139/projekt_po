@@ -8,7 +8,7 @@ public interface IReservationRepository
     Reservation? Get(int reservationId);
     List<Reservation>? GetAll();
     List<Reservation>? GetAllByUser(int userId);
-    Reservation? GetByDate(DateTime date);
+    List<Reservation>? GetByDate(DateTime date);
     List<Reservation>? GetByLane(int laneId);
     Reservation Add(int userId, string details, DateTime reservationDate);
     bool Delete(int reservationId);
@@ -33,22 +33,24 @@ public class ReservationRepository : IReservationRepository
     {
         return _db.Reservations
             .Where(r => r.UserId == userId)
+            .OrderBy(r => r.Date)
             .ToList();
     }
     public List<Reservation> GetAll()
     {
-        return _db.Reservations.ToList();
+        return _db.Reservations.OrderBy(r => r.Date).ToList();
     }
 
-    public Reservation? GetByDate(DateTime date)
+    public List<Reservation>? GetByDate(DateTime date)
     {
-        return _db.Reservations.FirstOrDefault(r => r.Date == date);
+        return _db.Reservations.Where(r => r.Date == date).ToList();
     }
     
     public List<Reservation> GetByLane(int laneId)
     {
         return _db.Reservations
             .Where(r => r.LaneId == laneId)
+            .OrderBy(r => r.Date)
             .ToList();
     }
 
@@ -89,6 +91,8 @@ public class ReservationRepository : IReservationRepository
         existingReservation.UserId = reservation.UserId;
         existingReservation.Details = reservation.Details;
         existingReservation.Date = reservation.Date;
+        existingReservation.LaneId = reservation.LaneId;
+        _db.Reservations.Update(existingReservation);
         _db.SaveChanges();
         return true;
     }

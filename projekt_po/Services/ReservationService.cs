@@ -147,16 +147,16 @@ public class ReservationService : BaseService, IModelService<Reservation>
     public bool CheckAvailability(DateTime date, int laneId)
     {
         _rbacService.CheckPermission(Reservation, Permission.Read);
-        var reservation = _reservationRepository.GetByDate(date);
-        if (reservation != null && reservation.LaneId == laneId)
+        var reservation = _reservationRepository.GetByDate(date)?.Where(r => r.LaneId == laneId)?.FirstOrDefault();
+        if (reservation != null)
         {
             AnsiConsole.MarkupLine("[red]Date is not available.[/]");
             Log($"Tried to check availability for date {date} on lane with id: {laneId} that is not available.");
             return false;
         }
-        AnsiConsole.MarkupLine("[green]Availability available.[/]");
+        AnsiConsole.MarkupLine("[green]Reservation available.[/]");
         Log("Checked availability for available date " + date + " and lane " + laneId);
-        return reservation == null;
+        return true;
     }
 
 }

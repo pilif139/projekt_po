@@ -98,6 +98,41 @@ public class LaneService : BaseService,IModelService<Lane>
         return lanes;
     }
 
+    public List<Lane>? GetByDate(DateTime date)
+    {
+        if(!_rbacService.CheckPermission(Resource, Permission.Read)) return null;
+        var lanes = GetAvailable();
+        if (lanes == null || lanes.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No lanes found.[/]");
+            Log("No lanes found.");
+            return null;
+        }
+        var reservations = _reservationRepository.GetByDate(date);
+        if (reservations == null || reservations.Count == 0)
+        {
+            Log($"No reservations found for {date} date.");
+            return lanes;
+        }
+        
+        foreach (var reservation in reservations)
+        {
+            var lane = lanes.FirstOrDefault(l => l.Id == reservation.LaneId);
+            if (lane != null)
+            {
+                lanes.Remove(lane);
+            }
+        }
+        if (lanes.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No lanes found.[/]");
+            Log("No lanes found.");
+            return null;
+        }
+        Log($"Available lanes for {date} date found.");
+        return lanes;
+    }
+
     public List<Lane>? GetByStatus(LaneStatus status)
     {
         if(!_rbacService.CheckPermission(Resource, Permission.Read)) return null;

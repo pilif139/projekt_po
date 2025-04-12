@@ -40,12 +40,12 @@ public class UserRepository : IUserRepository
     
     public List<User> GetAll()
     {
-        return _db.Users.ToList();
+        return _db.Users.OrderBy(u => u.Id).ToList();
     }
 
     public List<User> GetAllByRole(Role role)
     {
-        return _db.Users.Where(u => u.Role == role).ToList();
+        return _db.Users.Where(u => u.Role == role).OrderBy(u => u.Id).ToList();
     }
     
     public User? GetByLogin(string login)
