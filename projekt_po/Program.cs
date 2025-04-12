@@ -24,6 +24,8 @@ services.AddSingleton<IAuthService, AuthService>();
 services.AddSingleton<IRbacService, RbacService>();
 services.AddTransient<IUserRepository, UserRepository>();
 services.AddTransient<UserService>();
+services.AddTransient<ILaneRepository, LaneRepository>();
+services.AddTransient<LaneService>();
 services.AddTransient<IReservationRepository, ReservationRepository>();
 services.AddTransient<ReservationService>();
 
@@ -45,7 +47,6 @@ if (commandLineArgs.Contains("seed"))
 {
     var seeder = serviceProvider.GetService<Seeder>()!;
     seeder.Seed();
-    Console.WriteLine("Database seeded successfully");
     return;
 } 
 if (commandLineArgs.Contains("clean"))
