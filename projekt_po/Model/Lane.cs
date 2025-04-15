@@ -22,12 +22,16 @@ public class Lane : IModelType
     public int Id { get; set; }
     
     [Required]
+    [Range(1, 1000)]
     public int Number { get; set; }
     
     [Required]
     public LaneStatus Status { get; set; }
     
     [Required]
+    [DataType(DataType.Currency)]
+    [Range(0, 1000)]
+    [Column(TypeName = "decimal(18,2)")]
     public decimal Price { get; set; }
     
     [Required]
@@ -36,8 +40,8 @@ public class Lane : IModelType
 
     public User? User { get; set; }
     
-    [NotMapped]
-    public string FormattedPrice => Price.ToString("C", CultureInfo.CurrentCulture);
+    // [NotMapped]
+    // public string FormattedPrice => Price.ToString("C", CultureInfo.CurrentCulture);
 
     public List<Reservation> Reservations { get; set ; } = new List<Reservation>();
 
@@ -67,7 +71,11 @@ public class Lane : IModelType
     
     public override string ToString()
     {
-        return $"Lane number: {Number}, Price: {FormattedPrice}, status: {Status.ToString()}, worker assigned: {User?.ToString() ?? "none"}";
+        return $"Lane number: {Number}, Price: {Price}, status: {Status.ToString()}, worker assigned: {User?.ToString() ?? "none"}";
     }
     
+    public static implicit operator string(Lane lane)
+    {
+        return lane.Price.ToString("C", CultureInfo.CurrentCulture);
+    }
 }

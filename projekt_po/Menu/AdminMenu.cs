@@ -19,14 +19,81 @@ public class AdminMenu : BaseMenu
         _reservationService = reservationService;
         AddMenuOption("Add user", AddUser);
         AddMenuOption("Delete user", ()=>DeleteList(_userService));
+        AddMenuOption("Edit user", EditUser);
         AddMenuOption("List of users", ()=>List(_userService));
         AddMenuOption("Add reservation", AddReservation);
         AddMenuOption("Delete reservation", ()=>DeleteList(_reservationService));
+        AddMenuOption("Edit reservation", EditReservation);
         AddMenuOption("List reservations", ()=>List(_reservationService));
+        AddMenuOption("Add lane", AddLane);
+        AddMenuOption("Delete lane", ()=>DeleteList(_laneService));
+        AddMenuOption("List lanes", ()=>List(_laneService));
+    }
+
+    private void EditReservation()
+    {
+        var reservations = _reservationService.GetAll();
+        if (reservations == null || reservations.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No reservations found.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
+            return;
+        }
+        
+        var reservation = Prompt.SelectFromList("Choose reservation", reservations);
+        string details = Prompt.GetString("Enter new reservation details: ");
+        DateTime date = Prompt.GetDate("Enter new reservation date: ");
+        reservation.Details = details;
+        reservation.Date = date;
+        _reservationService.Update(reservation);
+        AnsiConsole.MarkupLine("[green]Reservation updated successfully.[/]");
+        Task.Delay(2000).Wait();
+    }
+
+    private void EditUser()
+    {
+        throw new NotImplementedException();
+    }
+
+    private void AddLane()
+    {
+        AnsiConsole.Clear();
+        AnsiConsole.MarkupLine("[blue]Creating new lane[/]");
+        while (true)
+        {
+            int number = Prompt.GetNumber("Enter lane number: ", 0, 1000);
+            decimal price = Prompt.GetNumber("Enter lane price: ", 0m, 1000m);
+            var status = Prompt.SelectFromList<LaneStatus>("Select status");
+            var workers = _userService.GetAllByRole(Role.Worker);
+            if (workers == null || workers.Count == 0)
+            {
+                AnsiConsole.MarkupLine("[red]No workers found.[/]");
+                AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+                Console.ReadKey();
+                return;
+            }
+
+            var worker = Prompt.SelectFromList("Select worker", workers);
+            Lane newLane = new Lane(status, number, price, worker.Id);
+            if (_laneService.Add(newLane))
+            {
+                AnsiConsole.MarkupLine("[green]Lane added successfully.[/]");
+                AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+                Console.ReadKey();
+                return;
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[red]Lane not added.[/]");
+            }
+        }
     }
 
     private void AddReservation()
     {
+        AnsiConsole.Clear();
+        AnsiConsole.MarkupLine("[blue]Creating new reservation[/]");
         var clients = _userService.GetAllByRole(Role.Client);
         if (clients == null || clients.Count == 0)
         {
@@ -35,23 +102,29 @@ public class AdminMenu : BaseMenu
             Console.ReadKey();
             return;
         }
-        
-        var lanes = _laneService.GetAvailable();
-        if (lanes == null || lanes.Count == 0)
-        {
-            AnsiConsole.MarkupLine("[red]No available lanes found.[/]");
-            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
-            Console.ReadKey();
-            return;
-        }
-
         var client = Prompt.SelectFromList("Choose client", clients);
-        var lane = Prompt.SelectFromList("Choose lane", lanes);
-        
-        string details = Prompt.GetString("Enter reservation details: ");
-        DateTime date = Prompt.GetDate("Enter reservation date: ");
-        Reservation newReservation = new Reservation(date, details, client.Id, lane.Id);
-        _reservationService.Add(newReservation);
+        DateTime reservationDate = default;
+        Lane? lane = null;
+
+        while (true)
+        {
+            reservationDate = Prompt.GetDate("Enter date of reservation: ");
+            if (reservationDate < DateTime.Now)
+            {
+                AnsiConsole.MarkupLine("[red]Date must be in the future.[/]");
+                continue;
+            }
+            var lanes = _laneService.GetByDate(reservationDate);
+            if (lanes == null || lanes.Count == 0)
+            {
+                AnsiConsole.MarkupLine("[red]No lanes available.[/]");
+                continue;
+            }
+            lane = Prompt.SelectFromList("Select available lane", lanes);
+            string details = Prompt.GetString("Enter reservation details: ");
+            Reservation newReservation = new Reservation(reservationDate, details, client.Id, lane.Id);
+            if (_reservationService.Add(newReservation)) break;
+        }
         AnsiConsole.MarkupLine("[green]Reservation added successfully.[/]");
         Task.Delay(2000).Wait();
     }
@@ -151,8 +224,7 @@ public class AdminMenu : BaseMenu
         else
         {
             var properties = typeof(T).GetProperties();
-        
-            // Utwórz tabelę i dodaj kolumny dla każdej właściwości
+            
             var table = new Table().Centered();
             AnsiConsole.Live(table)
                 .AutoClear(false)
@@ -160,9 +232,10 @@ public class AdminMenu : BaseMenu
                 .Cropping(VerticalOverflowCropping.Bottom)
                 .Start(ctx =>
                 {
+                    // add columns to the table
                     foreach (var prop in properties)
                     {
-                        // Pomijamy właściwości typu ICollection i podobne
+                        // properties that are not collections etc
                         if (!prop.PropertyType.IsGenericType && 
                             !typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType) || 
                             prop.PropertyType == typeof(string))
@@ -172,19 +245,18 @@ public class AdminMenu : BaseMenu
                             Task.Delay(100).Wait();
                         }
                     }
-        
-                    // Dodaj dane dla każdego obiektu
+                    // add rows to the table
                     foreach (var model in models)
                     {
                         var rowData = new List<string>();
                         foreach (var prop in properties)
                         {
-                            // Pomijamy kolekcje
+                            // same check as above
                             if (!prop.PropertyType.IsGenericType && 
                                 !typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType) || 
                                 prop.PropertyType == typeof(string))
                             {
-                                var value = prop.GetValue(model);
+                                var value = prop.GetValue(model.ToString());
                                 rowData.Add(value?.ToString() ?? "");
                             }
                         }

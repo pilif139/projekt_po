@@ -27,6 +27,28 @@ public static class Prompt
         return AnsiConsole.Prompt(textPrompt);
     }
 
+    public static T GetNumber<T>(string prompt, T min, T max)
+        where T : struct, IComparable<T>
+    {
+        var numberPrompt = new TextPrompt<T>(prompt.Length > 0 ? $"{prompt} " : $"Enter a {typeof(T)} number: ")
+            .InvalidChoiceMessage($"Number must be between {min} and {max}")
+            .PromptStyle("grey")
+            .Validate((val) =>
+                {
+                    if (val.CompareTo(min) < 0)
+                    {
+                        return ValidationResult.Error($"Number must be greater than {min}");
+                    }
+                    if (val.CompareTo(max) > 0)
+                    {
+                        return ValidationResult.Error($"Number must be less than {max}");
+                    }
+                    return ValidationResult.Error("Invalid input.");
+                }
+            );
+        return AnsiConsole.Prompt(numberPrompt);
+    }
+
     public static T SelectFromList<T>(string prompt, List<T> list) where T : class
     {
         if (list.Count == 0)
@@ -41,6 +63,19 @@ public static class Prompt
                 .AddChoices(list)
             );
         return selected;
+    }
+    
+    // implementation of SelectFromList for enums
+    public static TEnum SelectFromList<TEnum>(string prompt, IEnumerable<TEnum>? items = null) where TEnum : struct, Enum
+    {
+        items ??= Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
+        return AnsiConsole.Prompt(
+            new SelectionPrompt<TEnum>()
+                .Title(prompt)
+                .PageSize(15)
+                .MoreChoicesText("[grey](Move up and down)[/]")
+                .AddChoices(items)
+            );
     }
     
     public static DateTime GetDate(string prompt)

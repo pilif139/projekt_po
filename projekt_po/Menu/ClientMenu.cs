@@ -125,7 +125,11 @@ public class ClientMenu : BaseMenu
             }
 
             var lanes = _laneService.GetByDate(reservationDate);
-            if (lanes == null || lanes.Count == 0) continue;
+            if (lanes == null || lanes.Count == 0)
+            {
+                AnsiConsole.MarkupLine("[red]No lanes on this date available.[/]");
+                continue;
+            }
             lane = Prompt.SelectFromList("Select available lane", lanes);
             dateAvailable = true;
         }

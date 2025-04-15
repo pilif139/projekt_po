@@ -18,6 +18,24 @@ public class WorkerMenu : BaseMenu
         AddMenuOption("Delete reservation", DeleteReservation);
         AddMenuOption("Update reservation", UpdateReservation);
         AddMenuOption("Add reservation", AddReservation);
+        AddMenuOption("Show your lanes", ShowLanes);
+        AddMenuOption("Change lane status", ChangeLaneStatus);
+        AddMenuOption("Update lane price", UpdateLanePrice);
+    }
+
+    private void UpdateLanePrice()
+    {
+        throw new NotImplementedException();
+    }
+
+    private void ChangeLaneStatus()
+    {
+        throw new NotImplementedException();
+    }
+
+    private void ShowLanes()
+    {
+        throw new NotImplementedException();
     }
 
     private void UpdateReservation()
