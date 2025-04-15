@@ -41,6 +41,14 @@ services.AddTransient<AdminMenu>();
 
 var serviceProvider = services.BuildServiceProvider();
 
+string? adminLogin = Environment.GetEnvironmentVariable("ADMIN_LOGIN");
+string? adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
+if (!string.IsNullOrEmpty(adminLogin) && !string.IsNullOrEmpty(adminPassword))
+{
+    var seeder = serviceProvider.GetService<Seeder>();
+    seeder?.AddAdminUser(adminLogin, adminPassword);
+}
+
 //handling seeder
 var commandLineArgs = Environment.GetCommandLineArgs();
 if (commandLineArgs.Contains("seed"))

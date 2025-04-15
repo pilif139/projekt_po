@@ -22,7 +22,6 @@ public class Seeder
     {
         // run any new migrations before seeding
         _context.Database.Migrate();
-        if(!_context.Database.EnsureCreated()) throw new InvalidOperationException("Database migration failed");
         // check if the database is already seeded
         if (_context.Users.Any())
         {
@@ -90,8 +89,13 @@ public class Seeder
             .Generate(count);
     }
 
-    private void AddAdminUser(string login, string password)
+    public void AddAdminUser(string login, string password)
     {
+        // check if admin already exists
+        if (_context.Users.Any(u => u.Login == login && u.Role == Role.Admin))
+        {
+            return;
+        }
         var adminUser = new User(login, login, login, Hash.HashPassword(password), Role.Admin);
         _context.Users.Add(adminUser);
     }
