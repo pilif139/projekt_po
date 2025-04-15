@@ -33,7 +33,7 @@ If you don't add them, default values will be used that are "Admin" for both log
 
 ## Database structure ##
 
-!['Database schema'](./DATABASE%20STRUCTURE.png)
+!['Database schema'](./documentation/DATABASE%20STRUCTURE.png)
 
 ## resources ##
 
