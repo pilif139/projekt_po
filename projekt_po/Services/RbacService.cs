@@ -22,7 +22,8 @@ public enum Permission
 public enum Resource
 {
     User,
-    Reservation
+    Reservation,
+    Lane,
 }
 
 public interface IRbacService
@@ -41,28 +42,32 @@ public class RbacService : BaseService, IRbacService
             Role.Admin, new Dictionary<Resource, Permission>
             {
                 { Resource.User, Permission.All },
-                { Resource.Reservation, Permission.All }
+                { Resource.Reservation, Permission.All },
+                { Resource.Lane , Permission.All }
             }
         },
         {
             Role.Worker, new Dictionary<Resource, Permission>
             {
                 { Resource.User, Permission.Read },
-                { Resource.Reservation, Permission.All }
+                { Resource.Reservation, Permission.All },
+                { Resource.Lane, Permission.Read | Permission.Update}
             }
         },
         {
             Role.Client, new Dictionary<Resource, Permission>
             {
                 { Resource.User, Permission.Read },
-                { Resource.Reservation, Permission.Read | Permission.Create }
+                { Resource.Reservation, Permission.Read | Permission.Create },
+                { Resource.Lane, Permission.Read }
             }
         },
         {
             Role.None, new Dictionary<Resource, Permission>
             {
                 { Resource.User, Permission.None },
-                { Resource.Reservation, Permission.None }
+                { Resource.Reservation, Permission.None },
+                { Resource.Lane, Permission.None }
             }
         }
     };

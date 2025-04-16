@@ -8,7 +8,7 @@ public partial class RegexCheck
     [GeneratedRegex(@"^[a-zA-Z0-9_-]{3,20}$")]
     private static partial Regex LoginRegex();
     
-    [GeneratedRegex("@[a-zA-Z]")]
+    [GeneratedRegex(@"[a-zA-Z]")]
     private static partial Regex LettersRegex();
     
     [GeneratedRegex(@"\d")]
@@ -83,6 +83,11 @@ public partial class RegexCheck
         if (name.Length < 3)
         {
             AnsiConsole.MarkupLine("[red]Name and surname must be at least 3 characters long.[/]");
+            isValid = false;
+        }
+        if (name.Length > 20)
+        {
+            AnsiConsole.MarkupLine("[red]Name and surname must be at most 20 characters long.[/]");
             isValid = false;
         }
         if (NumbersRegex().IsMatch(name) || SpecialCharsRegex().IsMatch(name))

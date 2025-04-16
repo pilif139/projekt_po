@@ -10,6 +10,7 @@ public class DatabaseContext : DbContext
 {
     public DbSet<User> Users { get; init; }
     public DbSet<Reservation> Reservations { get; init; }
+    public DbSet<Lane> Lanes { get; init; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,6 +23,17 @@ public class DatabaseContext : DbContext
             .HasOne(r => r.User)
             .WithMany(u => u.Reservations)
             .HasForeignKey(r => r.UserId);
+
+        modelBuilder.Entity<Lane>()
+            .HasMany(l => l.Reservations)
+            .WithOne(r => r.Lane)
+            .HasForeignKey(r => r.LaneId);
+        
+        modelBuilder.Entity<Lane>()
+            .HasOne<User>(l => l.User)
+            .WithMany(u => u.Lanes)
+            .HasForeignKey(l => l.UserId);
+
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

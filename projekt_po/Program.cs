@@ -24,6 +24,8 @@ services.AddSingleton<IAuthService, AuthService>();
 services.AddSingleton<IRbacService, RbacService>();
 services.AddTransient<IUserRepository, UserRepository>();
 services.AddTransient<UserService>();
+services.AddTransient<ILaneRepository, LaneRepository>();
+services.AddTransient<LaneService>();
 services.AddTransient<IReservationRepository, ReservationRepository>();
 services.AddTransient<ReservationService>();
 
@@ -35,9 +37,18 @@ services.AddTransient<Cleaner>();
 services.AddTransient<AuthMenu>();
 services.AddTransient<ClientMenu>();
 services.AddTransient<AdminMenu>();
+services.AddTransient<WorkerMenu>();
 // add more services here like this: services.AddTransient<MyService1>();
 
 var serviceProvider = services.BuildServiceProvider();
+
+string? adminLogin = Environment.GetEnvironmentVariable("ADMIN_LOGIN");
+string? adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
+if (!string.IsNullOrEmpty(adminLogin) && !string.IsNullOrEmpty(adminPassword))
+{
+    var seeder = serviceProvider.GetService<Seeder>();
+    seeder?.AddAdminUser(adminLogin, adminPassword);
+}
 
 //handling seeder
 var commandLineArgs = Environment.GetCommandLineArgs();
@@ -45,7 +56,6 @@ if (commandLineArgs.Contains("seed"))
 {
     var seeder = serviceProvider.GetService<Seeder>()!;
     seeder.Seed();
-    Console.WriteLine("Database seeded successfully");
     return;
 } 
 if (commandLineArgs.Contains("clean"))
@@ -73,6 +83,7 @@ if (commandLineArgs.Contains("clean"))
 var authMenu = serviceProvider.GetService<AuthMenu>();
 var clientMenu = serviceProvider.GetService<ClientMenu>();
 var adminMenu = serviceProvider.GetService<AdminMenu>();
+var workerMenu = serviceProvider.GetService<WorkerMenu>();
 var authService = serviceProvider.GetService<IAuthService>();
 
 if (authMenu == null || clientMenu == null || adminMenu == null || authService == null)
@@ -97,7 +108,7 @@ while (showMenu)
             clientMenu.Show();
             break;
         case Role.Worker:
-            // worker menu
+            workerMenu.Show();
             break;
         default:
             return;

@@ -10,13 +10,16 @@ public class ClientMenu : BaseMenu
 {
     private readonly IAuthService _authService;
     private readonly ReservationService _reservationService;
+    private readonly LaneService _laneService;
 
-    public ClientMenu(IAuthService authService, ReservationService reservationService) : base("Client menu", authService)
+    public ClientMenu(IAuthService authService, ReservationService reservationService, LaneService laneService) : base("Client menu", authService)
     {
         _authService = authService;
         _reservationService = reservationService;
+        _laneService = laneService;
         AddMenuOption("Make reservation", MakeReservation);
         AddMenuOption("Your reservations", ShowUserReservations);
+        AddMenuOption("Edit reservation", EditReservation);
         AddMenuOption("Delete reservation", DeleteReservation);
     }
 
@@ -73,27 +76,15 @@ public class ClientMenu : BaseMenu
             return;
         }
 
-        var reservtionToEdit = AnsiConsole.Prompt(
-            new SelectionPrompt<Reservation>()
-                .Title("Choose reservation to edit")
-                .PageSize(15)
-                .MoreChoicesText("[grey](Move up and down))[/]")
-                .EnableSearch()
-                .SearchPlaceholderText("[grey](Search...)[/]")
-                .AddChoices(reservations)
-                .UseConverter(rez => $"reservation details:\n - {rez.Details},\n Date: {rez.Date}\n")
-        );
-
-        if (reservtionToEdit == null)
+        var reservationToEdit = Prompt.SelectFromList("Select reservation to edit", reservations);
+        AnsiConsole.MarkupLine($"[blue]Selected reservation: {reservationToEdit.Details}[/]");
+        string details = Prompt.GetString("Enter new details about reservation or enter to skip this:");
+        if (string.IsNullOrEmpty(details) || details.Trim().Length == 0)
         {
-            AnsiConsole.MarkupLine("[red]No reservation selected.[/]");
-            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
-            Console.ReadKey();
-            return;
+            details = reservationToEdit.Details;
         }
-        AnsiConsole.MarkupLine($"[blue]Selected reservation: {reservtionToEdit.Details}[/]");
-        string details = Prompt.GetString("Enter new details about reservation:");
         DateTime reservationDate = default;
+        Lane? lane = null;
         bool dateAvailable = false;
         while (!dateAvailable)
         {
@@ -104,16 +95,14 @@ public class ClientMenu : BaseMenu
                 AnsiConsole.MarkupLine("[red]Date must be in the future.[/]");
                 continue;
             }
-            if (!_reservationService.CheckAvailability(reservationDate))
-            {
-                AnsiConsole.MarkupLine("[red]Date is not available.[/]");
-                continue;
-            }
 
+            var lanes = _laneService.GetByDate(reservationDate);
+            if (lanes == null || lanes.Count == 0) continue;
+            lane = Prompt.SelectFromList("Select available lane", lanes);
             dateAvailable = true;
         }
-        Reservation updatedReservation = new Reservation(reservationDate, details, reservtionToEdit.UserId);
-        updatedReservation.Id = reservtionToEdit.Id;
+        Reservation updatedReservation = new Reservation(reservationDate, details, reservationToEdit.UserId, lane.Id);
+        updatedReservation.Id = reservationToEdit.Id;
         _reservationService.Update(updatedReservation);
     }
 
@@ -123,6 +112,7 @@ public class ClientMenu : BaseMenu
         string details = Prompt.GetString("Enter details about reservation:");
         DateTime reservationDate = default;
         bool dateAvailable = false;
+        Lane? lane = null;
 
         while (!dateAvailable)
         {
@@ -133,17 +123,19 @@ public class ClientMenu : BaseMenu
                 AnsiConsole.MarkupLine("[red]Date must be in the future.[/]");
                 continue;
             }
-            if (!_reservationService.CheckAvailability(reservationDate))
+
+            var lanes = _laneService.GetByDate(reservationDate);
+            if (lanes == null || lanes.Count == 0)
             {
-                AnsiConsole.MarkupLine("[red]Date is not available.[/]");
+                AnsiConsole.MarkupLine("[red]No lanes on this date available.[/]");
                 continue;
             }
-
+            lane = Prompt.SelectFromList("Select available lane", lanes);
             dateAvailable = true;
         }
 
         var user = _authService.GetLoggedUser()!;
-        _reservationService.Add(new Reservation(reservationDate, details, user.Id));
+        _reservationService.Add(new Reservation(reservationDate, details, user.Id, lane.Id));
         AnsiConsole.MarkupLine("[green]Reservation added successfully.[/]");
         Task.Delay(2000).Wait();
     }

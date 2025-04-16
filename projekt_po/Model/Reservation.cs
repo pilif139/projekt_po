@@ -13,11 +13,16 @@ public class Reservation : IModelType
     public DateTime Date { get; set; }
 
     [Required]
+    [StringLength(100)]
     public string Details { get; set; }
 
     [ForeignKey("User")]
     public int UserId { get; set; }
     public User? User { get; set; }
+    
+    [ForeignKey("Lane")]
+    public int LaneId { get; set; }
+    public Lane? Lane { get; set; }
 
     public Reservation()
     {
@@ -25,20 +30,22 @@ public class Reservation : IModelType
         Date = DateTime.Now;
     }
 
-    public Reservation(DateTime date, string details, int userId)
+    public Reservation(DateTime date, string details, int userId, int laneId)
     {
         Date = date;
         Details = details;
         UserId = userId;
+        LaneId = laneId;
     }
 
-    public Reservation(DateTime date, string details, int userId, User user) : this(date, details, userId)
+    public Reservation(DateTime date, string details, int userId, User user, int laneId, Lane lane) : this(date, details, userId, laneId)
     {
         User = user;
+        Lane = lane;
     }
 
     public override string ToString()
     {
-        return $"Reservation id: {Id}, user id: {UserId}, Date: {Date}, \nDetails: {Details}";
+        return $"Reservation id: {Id}, user id: {UserId}, Date: {Date}, \nDetails: {Details}, Lane number: {Lane.Number}";
     }
 }

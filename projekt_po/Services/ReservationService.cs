@@ -7,6 +7,7 @@ namespace projekt_po.Services;
 
 public class ReservationService : BaseService, IModelService<Reservation>
 {
+    private const Resource Reservation = Resource.Reservation;
     private readonly IReservationRepository _reservationRepository;
     private readonly UserService _userService;
     private readonly IRbacService _rbacService;
@@ -27,14 +28,14 @@ public class ReservationService : BaseService, IModelService<Reservation>
             Log($"Tried to get non-existent reservation with {id} id.");
             return null;
         }
-        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Read, reservation)) return null;
+        if (!_rbacService.CheckPermission(Reservation, Permission.Read, reservation)) return null;
         Log($"Getting reservation with id {id}.");
         return reservation;
     }
 
     public List<Reservation>? GetAll()
     {
-        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.All)) return new List<Reservation>();
+        if (!_rbacService.CheckPermission(Reservation, Permission.All)) return new List<Reservation>();
         Log("Getting all reservations.");
         return _reservationRepository.GetAll();
     }
@@ -43,14 +44,14 @@ public class ReservationService : BaseService, IModelService<Reservation>
     {
         var reservations = _reservationRepository.GetAllByUser(userId);
         if (reservations == null || reservations.Count == 0) return new List<Reservation>();
-        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Read, reservations[0])) return new List<Reservation>();
+        if (!_rbacService.CheckPermission(Reservation, Permission.Read, reservations[0])) return new List<Reservation>();
         Log("Getting all reservations for user with id:" + userId);
         return reservations;
     }
 
     public bool Add(Reservation reservation)
     {
-        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Create)) return false;
+        if (!_rbacService.CheckPermission(Reservation, Permission.Create)) return false;
         // checks if user exists
         var user = _userService.GetById(reservation.UserId);
         if (user == null)
@@ -68,8 +69,8 @@ public class ReservationService : BaseService, IModelService<Reservation>
         }
 
         // checks if the date is available
-        var existingReservation = _reservationRepository.GetByDate(reservation.Date);
-        if (existingReservation != null)
+        bool isAvailable = CheckAvailability(reservation.Date, reservation.LaneId);
+        if (!isAvailable)
         {
             AnsiConsole.MarkupLine("Date is not available.");
             Log($"Tried to add reservation for date {reservation.Date} that is not available.");
@@ -89,7 +90,7 @@ public class ReservationService : BaseService, IModelService<Reservation>
             Log($"Tried to delete non-existent reservation with {reservationId} id.");
             return false;
         }
-        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Delete, reservation)) return false;
+        if (!_rbacService.CheckPermission(Reservation, Permission.Delete, reservation)) return false;
         bool success = _reservationRepository.Delete(reservationId);
         if (success)
         {
@@ -113,9 +114,9 @@ public class ReservationService : BaseService, IModelService<Reservation>
             Log($"Tried to update non-existent reservation with {reservation.Id} id.");
             return false;
         }
-        if (!_rbacService.CheckPermission(Resource.Reservation, Permission.Update, existingReservation)) return false;
+        if (!_rbacService.CheckPermission(Reservation, Permission.Update, existingReservation)) return false;
         // checks if the date is available
-        if (!CheckAvailability(reservation.Date))
+        if (!CheckAvailability(reservation.Date, reservation.LaneId))
         {
             AnsiConsole.MarkupLine("[red]Date is not available.[/]");
             Log($"Tried to update reservation for date {reservation.Date} that is not available.");
@@ -143,12 +144,19 @@ public class ReservationService : BaseService, IModelService<Reservation>
         return success;
     }
 
-    public bool CheckAvailability(DateTime date)
+    public bool CheckAvailability(DateTime date, int laneId)
     {
-        _rbacService.CheckPermission(Resource.Reservation, Permission.Read);
-        var reservation = _reservationRepository.GetByDate(date);
-        Log("Checked availability for date " + date);
-        return reservation == null;
+        _rbacService.CheckPermission(Reservation, Permission.Read);
+        var reservation = _reservationRepository.GetByDate(date)?.Where(r => r.LaneId == laneId)?.FirstOrDefault();
+        if (reservation != null)
+        {
+            AnsiConsole.MarkupLine("[red]Date is not available.[/]");
+            Log($"Tried to check availability for date {date} on lane with id: {laneId} that is not available.");
+            return false;
+        }
+        AnsiConsole.MarkupLine("[green]Reservation available.[/]");
+        Log("Checked availability for available date " + date + " and lane " + laneId);
+        return true;
     }
 
 }
