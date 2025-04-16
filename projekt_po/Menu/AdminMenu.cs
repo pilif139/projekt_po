@@ -1,4 +1,4 @@
-﻿using projekt_po.Model;
+using projekt_po.Model;
 using projekt_po.Services;
 using projekt_po.Utils;
 using Spectre.Console;
@@ -18,16 +18,16 @@ public class AdminMenu : BaseMenu
         _authService = authService;
         _reservationService = reservationService;
         AddMenuOption("Add user", AddUser);
-        AddMenuOption("Delete user", ()=>DeleteList(_userService));
+        AddMenuOption("Delete user", () => DeleteList(_userService));
         AddMenuOption("Edit user", EditUser);
-        AddMenuOption("List of users", ()=>List(_userService));
+        AddMenuOption("List of users", () => List(_userService));
         AddMenuOption("Add reservation", AddReservation);
-        AddMenuOption("Delete reservation", ()=>DeleteList(_reservationService));
+        AddMenuOption("Delete reservation", () => DeleteList(_reservationService));
         AddMenuOption("Edit reservation", EditReservation);
-        AddMenuOption("List reservations", ()=>List(_reservationService));
+        AddMenuOption("List reservations", () => List(_reservationService));
         AddMenuOption("Add lane", AddLane);
-        AddMenuOption("Delete lane", ()=>DeleteList(_laneService));
-        AddMenuOption("List lanes", ()=>List(_laneService));
+        AddMenuOption("Delete lane", () => DeleteList(_laneService));
+        AddMenuOption("List lanes", () => List(_laneService));
     }
 
     private void EditReservation()
@@ -40,7 +40,7 @@ public class AdminMenu : BaseMenu
             Console.ReadKey();
             return;
         }
-        
+
         var reservation = Prompt.SelectFromList("Choose reservation", reservations);
         string details = Prompt.GetString("Enter new reservation details: ");
         DateTime date = Prompt.GetDate("Enter new reservation date: ");
@@ -53,7 +53,69 @@ public class AdminMenu : BaseMenu
 
     private void EditUser()
     {
-        throw new NotImplementedException();
+        var clients = _userService.GetAllByRole(Role.Client);
+        var workers = _userService.GetAllByRole(Role.Worker);
+        var users = clients?.Concat(workers!).ToList();
+        
+        AnsiConsole.Clear();
+        AnsiConsole.MarkupLine("[blue]Editing user[/]");
+        if (users == null || users.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No users found to edit.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
+            return;
+        }
+        var user = Prompt.SelectFromList("Choose user to edit", users);
+        // from editable properties make a menu to pick which one to edit and then make prompt for each one
+        var menuOpitons = new List<string>
+        {
+            "Login",
+            "Name",
+            "Surname",
+            "Password",
+            "Role",
+            "Exit"
+        };
+        bool exit = false;
+        while (!exit)
+        {
+            var selectedOption = Prompt.SelectFromList("Choose property to edit", menuOpitons);
+            switch (selectedOption)
+            {
+                case "Login":
+                    Func<string, bool> validateLogin = (val) =>
+                    {
+                        if (_userService.GetByLogin(val) == null) return true;
+                        AnsiConsole.MarkupLine("[red]Login already in use![/]");
+                        return false;
+                    };
+                    string newLogin = Prompt.GetString("Enter new login:", RegexCheck.IsValidLogin, validateLogin);
+                    user.Login = newLogin;
+                    break;
+                case "Name":
+                    string newName = Prompt.GetString("Enter new name:", RegexCheck.IsValidNameAndSurname);
+                    user.Name = newName;
+                    break;
+                case "Surname":
+                    string newSurname = Prompt.GetString("Enter new surname:", RegexCheck.IsValidNameAndSurname);
+                    user.Surname = newSurname;
+                    break;
+                case "Password":
+                    string newPassword = Prompt.GetString("Enter new password:", true, RegexCheck.IsValidPassword);
+                    user.Password = Hash.HashPassword(newPassword);
+                    break;
+                case "Role":
+                    Role newRole = Prompt.SelectFromList<Role>("Choose role to edit");
+                    user.Role = newRole;
+                    break;
+                case "Exit":
+                    exit = true;
+                    break;
+            }
+        }
+        _userService.Update(user);
+        Task.Delay(2000).Wait();
     }
 
     private void AddLane()
@@ -138,7 +200,7 @@ public class AdminMenu : BaseMenu
             string login = Prompt.GetString("Enter your login:", RegexCheck.IsValidLogin);
             string name = Prompt.GetString("Enter your name:", RegexCheck.IsValidNameAndSurname);
             string surname = Prompt.GetString("Enter your surname:", RegexCheck.IsValidNameAndSurname);
-            string password = Prompt.GetString("Enter your password", RegexCheck.IsValidPassword, isSecret: true);
+            string password = Prompt.GetString("Enter your password",true, RegexCheck.IsValidPassword);
             var role = AnsiConsole.Prompt(
                 new SelectionPrompt<Role>()
                     .Title("Choose role")
@@ -224,7 +286,7 @@ public class AdminMenu : BaseMenu
         else
         {
             var properties = typeof(T).GetProperties();
-            
+
             var table = new Table().Centered();
             AnsiConsole.Live(table)
                 .AutoClear(false)
@@ -236,8 +298,8 @@ public class AdminMenu : BaseMenu
                     foreach (var prop in properties)
                     {
                         // properties that are not collections etc
-                        if (!prop.PropertyType.IsGenericType && 
-                            !typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType) || 
+                        if (!prop.PropertyType.IsGenericType &&
+                            !typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType) ||
                             prop.PropertyType == typeof(string))
                         {
                             table.AddColumn($"[bold cyan1]{prop.Name}[/]");
@@ -252,11 +314,11 @@ public class AdminMenu : BaseMenu
                         foreach (var prop in properties)
                         {
                             // same check as above
-                            if (!prop.PropertyType.IsGenericType && 
-                                !typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType) || 
+                            if (!prop.PropertyType.IsGenericType &&
+                                !typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType) ||
                                 prop.PropertyType == typeof(string))
                             {
-                                var value = prop.GetValue(model.ToString());
+                                var value = prop.GetValue(model);
                                 rowData.Add(value?.ToString() ?? "");
                             }
                         }

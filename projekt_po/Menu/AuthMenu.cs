@@ -87,7 +87,7 @@ public class AuthMenu
             string login = Prompt.GetString("Enter your login:", RegexCheck.IsValidLogin);
             string name = Prompt.GetString("Enter your name:", RegexCheck.IsValidNameAndSurname);
             string surname = Prompt.GetString("Enter your surname:", RegexCheck.IsValidNameAndSurname);
-            string password = Prompt.GetString("Enter your password", RegexCheck.IsValidPassword, isSecret: true);
+            string password = Prompt.GetString("Enter your password", true,RegexCheck.IsValidPassword);
             string passwordRepeat = Prompt.GetString("Repeat your password", isSecret: true);
             if (password != passwordRepeat)
             {

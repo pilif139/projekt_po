@@ -127,4 +127,18 @@ public class UserService : BaseService, IModelService<User>
         Log($"GetAllUsers called and found ${users.Count} users.");
         return users;
     }
+    
+    public User? GetByLogin(string login)
+    {
+        if (!_rbacService.CheckPermission(Resource, Permission.Read)) return null;
+        var user = _userRepository.GetByLogin(login);
+        if (user == null)
+        {
+            AnsiConsole.MarkupLine("User not found");
+            Log($"User with login {login} not found.");
+            return null;
+        }
+        Log($"User with login {login} found.");
+        return user;
+    }
 }

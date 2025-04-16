@@ -37,6 +37,7 @@ services.AddTransient<Cleaner>();
 services.AddTransient<AuthMenu>();
 services.AddTransient<ClientMenu>();
 services.AddTransient<AdminMenu>();
+services.AddTransient<WorkerMenu>();
 // add more services here like this: services.AddTransient<MyService1>();
 
 var serviceProvider = services.BuildServiceProvider();
@@ -82,6 +83,7 @@ if (commandLineArgs.Contains("clean"))
 var authMenu = serviceProvider.GetService<AuthMenu>();
 var clientMenu = serviceProvider.GetService<ClientMenu>();
 var adminMenu = serviceProvider.GetService<AdminMenu>();
+var workerMenu = serviceProvider.GetService<WorkerMenu>();
 var authService = serviceProvider.GetService<IAuthService>();
 
 if (authMenu == null || clientMenu == null || adminMenu == null || authService == null)
@@ -106,7 +108,7 @@ while (showMenu)
             clientMenu.Show();
             break;
         case Role.Worker:
-            // worker menu
+            workerMenu.Show();
             break;
         default:
             return;

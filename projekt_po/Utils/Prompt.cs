@@ -4,7 +4,12 @@ namespace projekt_po.Utils;
 
 public static class Prompt
 {
-    public static string GetString(string prompt,Func<string, bool>? regexFunc = null ,bool isSecret = false)
+    public static string GetString(string prompt, params Func<string, bool>[] regexFuncs)
+    {
+        return GetString(prompt, false, regexFuncs);
+    }
+    
+    public static string GetString(string prompt,bool isSecret = false, params Func<string, bool>[] regexFuncs)
     {
         var textPrompt =
             new TextPrompt<string>(prompt.Length > 0 ? $"{prompt} " : "Enter a string:")
@@ -12,11 +17,18 @@ public static class Prompt
                 .PromptStyle("grey")
                 .Validate((val) =>
                     {
-                        if (regexFunc == null || regexFunc(val))
+                        if (regexFuncs == null || regexFuncs.Length == 0)
                         {
                             return ValidationResult.Success();
                         }
-                        return ValidationResult.Error("Invalid input.");
+                        foreach(var func in regexFuncs)
+                        {
+                            if (!func(val))
+                            {
+                                return ValidationResult.Error("Invalid input.");
+                            }
+                        }
+                        return ValidationResult.Success();
                     }
                 );
 
@@ -66,7 +78,7 @@ public static class Prompt
     }
     
     // implementation of SelectFromList for enums
-    public static TEnum SelectFromList<TEnum>(string prompt, IEnumerable<TEnum>? items = null) where TEnum : struct, Enum
+    public static TEnum SelectFromList<TEnum>(string prompt, IEnumerable<TEnum> items = null) where TEnum : struct, Enum
     {
         items ??= Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
         return AnsiConsole.Prompt(
