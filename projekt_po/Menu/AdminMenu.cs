@@ -9,25 +9,26 @@ public class AdminMenu : BaseMenu
 {
     private readonly UserService _userService;
     private readonly LaneService _laneService;
-    private readonly IAuthService _authService;
     private readonly ReservationService _reservationService;
-    public AdminMenu(UserService userService, LaneService laneService, IAuthService authService, ReservationService reservationService) : base("Admin menu", authService)
+
+    public AdminMenu(UserService userService, LaneService laneService, IAuthService authService,
+        ReservationService reservationService) : base("Admin menu", authService)
     {
         _userService = userService;
         _laneService = laneService;
-        _authService = authService;
         _reservationService = reservationService;
         AddMenuOption("Add user", AddUser);
-        AddMenuOption("Delete user", () => DeleteList(_userService));
+        AddMenuOption("Delete user", () => DeleteItems(_userService, _userService.GetAll()));
         AddMenuOption("Edit user", EditUser);
-        AddMenuOption("List of users", () => List(_userService));
+        AddMenuOption("List of users", () => ListItems(_userService.GetAll()));
         AddMenuOption("Add reservation", AddReservation);
-        AddMenuOption("Delete reservation", () => DeleteList(_reservationService));
+        AddMenuOption("Delete reservation", () => DeleteItems(_reservationService, _reservationService.GetAll()));
         AddMenuOption("Edit reservation", EditReservation);
-        AddMenuOption("List reservations", () => List(_reservationService));
+        AddMenuOption("List reservations", () => ListItems(_reservationService.GetAll()));
         AddMenuOption("Add lane", AddLane);
-        AddMenuOption("Delete lane", () => DeleteList(_laneService));
-        AddMenuOption("List lanes", () => List(_laneService));
+        AddMenuOption("Delete lane", () => DeleteItems(_laneService, _laneService.GetAll()));
+        AddMenuOption("Edit lane", EditLane);
+        AddMenuOption("List lanes", () => ListItems(_laneService.GetAll()));
     }
 
     private void EditReservation()
@@ -56,7 +57,7 @@ public class AdminMenu : BaseMenu
         var clients = _userService.GetAllByRole(Role.Client);
         var workers = _userService.GetAllByRole(Role.Worker);
         var users = clients?.Concat(workers!).ToList();
-        
+
         AnsiConsole.Clear();
         AnsiConsole.MarkupLine("[blue]Editing user[/]");
         if (users == null || users.Count == 0)
@@ -66,6 +67,7 @@ public class AdminMenu : BaseMenu
             Console.ReadKey();
             return;
         }
+
         var user = Prompt.SelectFromList("Choose user to edit", users);
         // from editable properties make a menu to pick which one to edit and then make prompt for each one
         var menuOpitons = new List<string>
@@ -114,8 +116,70 @@ public class AdminMenu : BaseMenu
                     break;
             }
         }
+
         _userService.Update(user);
         Task.Delay(2000).Wait();
+    }
+
+    private void EditLane()
+    {
+        var lanes = _laneService.GetAll();
+        if (lanes == null || lanes.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No lanes found to edit.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
+            return;
+        }
+        AnsiConsole.Clear();
+        AnsiConsole.MarkupLine("[blue]Editing lane[/]");
+        var lane = Prompt.SelectFromList("Choose lane to edit", lanes);
+        var properties = new List<string>
+        {
+            "Number",
+            "Price",
+            "Status",
+            "Worker",
+            "Exit"
+        };
+        
+        bool exit = false;
+        while (!exit)
+        {
+            var selectedOption = Prompt.SelectFromList("Choose property to edit", properties);
+            switch (selectedOption)
+            {
+                case "Number":
+                    int newNumber = Prompt.GetNumber("Enter new lane number: ", 0, 1000);
+                    lane.Number = newNumber;
+                    break;
+                case "Price":
+                    decimal newPrice = Prompt.GetNumber("Enter new lane price: ", 0m, 1000m);
+                    lane.Price = newPrice;
+                    break;
+                case "Status":
+                    var status = Prompt.SelectFromList<LaneStatus>("Select status");
+                    lane.Status = status;
+                    break;
+                case "Worker":
+                    var workers = _userService.GetAllByRole(Role.Worker);
+                    if (workers == null || workers.Count == 0)
+                    {
+                        AnsiConsole.MarkupLine("[red]No workers found.[/]");
+                        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+                        Console.ReadKey();
+                        return;
+                    }
+
+                    var worker = Prompt.SelectFromList("Select worker", workers);
+                    lane.UserId = worker.Id;
+                    break;
+                case "Exit":
+                    exit = true;
+                    break;
+            }
+        }
+        _laneService.Update(lane);
     }
 
     private void AddLane()
@@ -164,6 +228,7 @@ public class AdminMenu : BaseMenu
             Console.ReadKey();
             return;
         }
+
         var client = Prompt.SelectFromList("Choose client", clients);
         DateTime reservationDate = default;
         Lane? lane = null;
@@ -176,17 +241,20 @@ public class AdminMenu : BaseMenu
                 AnsiConsole.MarkupLine("[red]Date must be in the future.[/]");
                 continue;
             }
+
             var lanes = _laneService.GetByDate(reservationDate);
             if (lanes == null || lanes.Count == 0)
             {
                 AnsiConsole.MarkupLine("[red]No lanes available.[/]");
                 continue;
             }
+
             lane = Prompt.SelectFromList("Select available lane", lanes);
             string details = Prompt.GetString("Enter reservation details: ");
             Reservation newReservation = new Reservation(reservationDate, details, client.Id, lane.Id);
             if (_reservationService.Add(newReservation)) break;
         }
+
         AnsiConsole.MarkupLine("[green]Reservation added successfully.[/]");
         Task.Delay(2000).Wait();
     }
@@ -200,7 +268,7 @@ public class AdminMenu : BaseMenu
             string login = Prompt.GetString("Enter your login:", RegexCheck.IsValidLogin);
             string name = Prompt.GetString("Enter your name:", RegexCheck.IsValidNameAndSurname);
             string surname = Prompt.GetString("Enter your surname:", RegexCheck.IsValidNameAndSurname);
-            string password = Prompt.GetString("Enter your password",true, RegexCheck.IsValidPassword);
+            string password = Prompt.GetString("Enter your password", true, RegexCheck.IsValidPassword);
             var role = AnsiConsole.Prompt(
                 new SelectionPrompt<Role>()
                     .Title("Choose role")
@@ -231,106 +299,5 @@ public class AdminMenu : BaseMenu
                 return;
             }
         }
-    }
-
-    private void DeleteList<T>(IModelService<T> service) where T : IModelType
-    {
-        string modelName = typeof(T).Name;
-        AnsiConsole.Clear();
-        var values = service.GetAll();
-        if (values == null || values.Count == 0)
-        {
-            AnsiConsole.MarkupLine("[red]Nothing to delete.[/]");
-            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
-            Console.ReadKey();
-            return;
-        }
-        var valuesToDelete = AnsiConsole.Prompt(
-            new MultiSelectionPrompt<T>()
-                .Title($"Choose {modelName}s to delete")
-                .NotRequired()
-                .PageSize(15)
-                .MoreChoicesText("[grey](Move up and down))[/]")
-                .InstructionsText(
-                    "[grey](Press [blue]<space>[/] to pick a user to delete, " +
-                    "[green]<enter>[/] to accept)[/]")
-                .AddChoices(values));
-
-        foreach (var value in valuesToDelete)
-        {
-            service.Delete(value.Id);
-        }
-        if (valuesToDelete.Count > 0)
-        {
-            AnsiConsole.MarkupLine($"[green]{modelName}s deleted successfully.[/]");
-        }
-        else
-        {
-            AnsiConsole.MarkupLine($"[red]No {modelName}s deleted.[/]");
-        }
-
-        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
-        Console.ReadKey();
-    }
-
-    private void List<T>(IModelService<T> service) where T : IModelType
-    {
-        AnsiConsole.Clear();
-        string modelName = typeof(T).Name;
-        var models = service.GetAll();
-        AnsiConsole.Markup($"[blue]List of {modelName}s[/]\n");
-        if (models == null)
-        {
-            AnsiConsole.MarkupLine($"[red]No {modelName}s found.[/]");
-        }
-        else
-        {
-            var properties = typeof(T).GetProperties();
-
-            var table = new Table().Centered();
-            AnsiConsole.Live(table)
-                .AutoClear(false)
-                .Overflow(VerticalOverflow.Ellipsis)
-                .Cropping(VerticalOverflowCropping.Bottom)
-                .Start(ctx =>
-                {
-                    // add columns to the table
-                    foreach (var prop in properties)
-                    {
-                        // properties that are not collections etc
-                        if (!prop.PropertyType.IsGenericType &&
-                            !typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType) ||
-                            prop.PropertyType == typeof(string))
-                        {
-                            table.AddColumn($"[bold cyan1]{prop.Name}[/]");
-                            ctx.Refresh();
-                            Task.Delay(100).Wait();
-                        }
-                    }
-                    // add rows to the table
-                    foreach (var model in models)
-                    {
-                        var rowData = new List<string>();
-                        foreach (var prop in properties)
-                        {
-                            // same check as above
-                            if (!prop.PropertyType.IsGenericType &&
-                                !typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType) ||
-                                prop.PropertyType == typeof(string))
-                            {
-                                var value = prop.GetValue(model);
-                                rowData.Add(value?.ToString() ?? "");
-                            }
-                        }
-                        table.AddRow(rowData.ToArray());
-                        ctx.Refresh();
-                        Task.Delay(100).Wait();
-                    }
-
-                    table.Border(TableBorder.Heavy);
-                });
-        }
-        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
-        Console.ReadKey();
     }
 }

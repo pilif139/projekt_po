@@ -114,10 +114,14 @@ public class UserService : BaseService, IModelService<User>
         return users;
     }
 
-    public List<User>? GetAllByRole(Role role)
+    public List<User>? GetAllByRole(params List<Role> roles)
     {
         if (!_rbacService.CheckPermission(Resource, Permission.Read)) return null;
-        var users = _userRepository.GetAllByRole(role);
+        List<User> users = new List<User>();
+        foreach (var role in roles)
+        {
+            users.AddRange(_userRepository.GetAllByRole(role));
+        }
         if (users.Count == 0)
         {
             AnsiConsole.MarkupLine("No users found.");

@@ -90,6 +90,26 @@ public static class Prompt
             );
     }
     
+    public static List<T> SelectMultipleFromList<T>(string prompt, List<T> list) where T : class
+    {
+        if (list.Count == 0)
+        {
+            throw new ArgumentException("List cannot be empty");
+        }
+        var selected = AnsiConsole.Prompt(
+                new MultiSelectionPrompt<T>()
+                    .Title(prompt)
+                    .NotRequired()
+                    .PageSize(15)
+                    .MoreChoicesText("[grey](Move up and down))[/]")
+                    .InstructionsText(
+                        "[grey](Press [blue]<space>[/] to pick a user to delete, " +
+                        "[green]<enter>[/] to accept)[/]")
+                    .AddChoices(list));
+        
+        return selected;
+    }
+    
     public static DateTime GetDate(string prompt)
     {
         const string format = "yyyy-MM-dd HH:mm";
