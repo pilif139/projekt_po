@@ -22,7 +22,7 @@ public class LaneService : BaseService,IModelService<Lane>
     public bool Add(Lane lane)
     {
         if(!_rbacService.CheckPermission(Resource, Permission.Create)) return false;
-        ValidateLane(lane);
+        if (!ValidateLane(lane)) return false;
         _laneRepository.Add(lane.Number, lane.Status, lane.Price, lane.UserId);
         AnsiConsole.MarkupLine("[green]Lane added successfully.[/]");
         Log($"Lane with number {lane.Number} added.");

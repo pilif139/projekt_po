@@ -58,7 +58,7 @@ public abstract class BaseMenu
         AnsiConsole.Clear();
         string modelName = typeof(T).Name;
         AnsiConsole.Markup($"[blue]List of {modelName}s[/]\n");
-        if (items == null)
+        if (items == null || items.Count == 0)
         {
             AnsiConsole.MarkupLine($"[red]No {modelName}s found.[/]");
         }
@@ -132,11 +132,11 @@ public abstract class BaseMenu
             service.Delete(value.Id);
         }
 
-        if (valuesToDelete.Count > 0)
+        if (valuesToDelete.Count > 1)
         {
             AnsiConsole.MarkupLine($"[green]{modelName}s deleted successfully.[/]");
         }
-        else
+        else if(valuesToDelete.Count == 0)
         {
             AnsiConsole.MarkupLine($"[red]No {modelName}s deleted.[/]");
         }

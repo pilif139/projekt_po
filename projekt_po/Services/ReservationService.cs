@@ -76,7 +76,7 @@ public class ReservationService : BaseService, IModelService<Reservation>
             Log($"Tried to add reservation for date {reservation.Date} that is not available.");
             return false;
         }
-        var newReservation = _reservationRepository.Add(reservation.UserId, reservation.Details, reservation.Date);
+        var newReservation = _reservationRepository.Add(reservation.UserId, reservation.Details, reservation.Date, reservation.LaneId);
         Log($"Reservation with id {newReservation.Id} added.");
         return true;
     }

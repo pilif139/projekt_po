@@ -138,7 +138,6 @@ public class UserService : BaseService, IModelService<User>
         var user = _userRepository.GetByLogin(login);
         if (user == null)
         {
-            AnsiConsole.MarkupLine("User not found");
             Log($"User with login {login} not found.");
             return null;
         }
