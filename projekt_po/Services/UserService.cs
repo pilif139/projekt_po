@@ -5,6 +5,9 @@ using Spectre.Console;
 
 namespace projekt_po.Services;
 
+/// <summary>
+/// Service for managing users in the system.
+/// </summary>
 public class UserService : BaseService, IModelService<User>
 {
     private const Resource Resource = Services.Resource.User;
