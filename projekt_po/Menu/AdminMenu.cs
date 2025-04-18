@@ -29,6 +29,21 @@ public class AdminMenu : BaseMenu
         AddMenuOption("Delete lane", () => DeleteItems(_laneService, _laneService.GetAll()));
         AddMenuOption("Edit lane", EditLane);
         AddMenuOption("List lanes", () => ListItems(_laneService.GetAll()));
+        AddMenuOption("Close lane", CloseLane);
+    }
+
+    private void CloseLane()
+    {
+        var lanes = _laneService.GetByStatus(LaneStatus.Available, LaneStatus.Cleaning, LaneStatus.Maintenance);
+        if (lanes == null || lanes.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No lanes available to close.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
+            return;
+        }
+        var lane = Prompt.SelectFromList("Select lane to close", lanes);
+        _laneService.CloseLane(lane.Id);
     }
 
     private void EditReservation()
@@ -304,10 +319,10 @@ public class AdminMenu : BaseMenu
         {
             AnsiConsole.Clear();
             AnsiConsole.MarkupLine("[blue]Creating new user[/]");
-            string login = Prompt.GetString("Enter your login:", RegexCheck.IsValidLogin);
-            string name = Prompt.GetString("Enter your name:", RegexCheck.IsValidNameAndSurname);
-            string surname = Prompt.GetString("Enter your surname:", RegexCheck.IsValidNameAndSurname);
-            string password = Prompt.GetString("Enter your password", true, RegexCheck.IsValidPassword);
+            string login = Prompt.GetString("Enter login:", RegexCheck.IsValidLogin);
+            string name = Prompt.GetString("Enter name:", RegexCheck.IsValidNameAndSurname);
+            string surname = Prompt.GetString("Enter surname:", RegexCheck.IsValidNameAndSurname);
+            string password = Prompt.GetString("Enter password", true, RegexCheck.IsValidPassword);
             var role = AnsiConsole.Prompt(
                 new SelectionPrompt<Role>()
                     .Title("Choose role")
@@ -332,6 +347,27 @@ public class AdminMenu : BaseMenu
             }
             else
             {
+                if (role == Role.Worker)
+                {
+                    if (AnsiConsole.Confirm("Do you want to assing any lanes to this worker?"))
+                    {
+                        var lanes = _laneService.GetAll();
+                        if (lanes == null || lanes.Count == 0)
+                        {
+                            AnsiConsole.MarkupLine("[red]No available lanes to assing found.[/]");
+                        }
+                        else
+                        {
+                            var assignedLanes = Prompt.SelectMultipleFromList("Select lanes to assign", lanes);
+                            var workerId = _userService.GetByLogin(user.Login)?.Id;
+                            foreach (var lane in assignedLanes)
+                            {
+                                lane.UserId = workerId ?? lane.UserId;
+                                _laneService.Update(lane);
+                            }
+                        }
+                    }
+                }
                 AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
                 Console.ReadKey();
                 return;

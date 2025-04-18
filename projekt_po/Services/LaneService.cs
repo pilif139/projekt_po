@@ -55,7 +55,7 @@ public class LaneService : BaseService,IModelService<Lane>
 
     public bool Update(Lane lane)
     {
-        if(!_rbacService.CheckPermission(Resource, Permission.Update)) return false;
+        if(!_rbacService.CheckPermission(Resource, Permission.Update, lane)) return false;
         ValidateLane(lane);
         var existingLane = _laneRepository.Get(lane.Id);
         if (existingLane == null)
@@ -147,17 +147,21 @@ public class LaneService : BaseService,IModelService<Lane>
         return lanes;
     }
 
-    public List<Lane>? GetByStatus(LaneStatus status)
+    public List<Lane>? GetByStatus(params List<LaneStatus> statuses)
     {
         if(!_rbacService.CheckPermission(Resource, Permission.Read)) return null;
-        var lanes = _laneRepository.GetByStatus(status);
+        List<Lane> lanes = new List<Lane>();
+        foreach (var status in statuses)
+        {
+            lanes.AddRange(_laneRepository.GetByStatus(status));
+        }
         if (lanes.Count == 0)
         {
             AnsiConsole.MarkupLine("[red]No lanes found.[/]");
-            Log($"No lanes found with status {status}.");
+            Log($"No lanes found with status {statuses}.");
             return null;
         }
-        Log($"Lanes found with status {status}.");
+        Log($"Lanes found with status {statuses}.");
         return lanes;
     }
 

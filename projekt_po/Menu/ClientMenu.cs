@@ -65,9 +65,9 @@ public class ClientMenu : BaseMenu
 
     private void EditReservation()
     {
-        Console.Clear();
-        int userId = _authService.GetLoggedUser()!.Id;
+        var userId = _authService.GetLoggedUser()!.Id;
         var reservations = _reservationService.GetAllByUser(userId);
+        AnsiConsole.Clear();
         if (reservations == null || reservations.Count == 0)
         {
             AnsiConsole.MarkupLine("[red]No reservations to edit found.[/]");
@@ -75,35 +75,62 @@ public class ClientMenu : BaseMenu
             Console.ReadKey();
             return;
         }
-
         var reservationToEdit = Prompt.SelectFromList("Select reservation to edit", reservations);
-        AnsiConsole.MarkupLine($"[blue]Selected reservation: {reservationToEdit.Details}[/]");
-        string details = Prompt.GetString("Enter new details about reservation or enter to skip this:");
-        if (string.IsNullOrEmpty(details) || details.Trim().Length == 0)
+        var menuOptions = new List<string>
         {
-            details = reservationToEdit.Details;
-        }
-        DateTime reservationDate = default;
-        Lane? lane = null;
-        bool dateAvailable = false;
-        while (!dateAvailable)
+            "Details",
+            "Date",
+            "Lane",
+            "Exit"
+        };
+        bool exit = false;
+        while (!exit)
         {
-            reservationDate = Prompt.GetDate("Enter new date of reservation: ");
-
-            if (reservationDate < DateTime.Now)
+            var option = Prompt.SelectFromList("Select option to edit", menuOptions);
+            switch (option)
             {
-                AnsiConsole.MarkupLine("[red]Date must be in the future.[/]");
-                continue;
-            }
+                case "Details":
+                    var details = Prompt.GetString("Enter new details");
+                    reservationToEdit.Details = details;
+                    break;
+                case "Date":
+                    Func<DateTime, bool> validateDate = (val) =>
+                    {
+                        if (val < DateTime.Now)
+                        {
+                            AnsiConsole.MarkupLine("[red]Date must be in the future.[/]");
+                            return false;
+                        }
 
-            var lanes = _laneService.GetByDate(reservationDate);
-            if (lanes == null || lanes.Count == 0) continue;
-            lane = Prompt.SelectFromList("Select available lane", lanes);
-            dateAvailable = true;
+                        if (!_reservationService.CheckAvailability(val, reservationToEdit.LaneId))
+                        {
+                            AnsiConsole.MarkupLine("[red]Lane is not available on this date.[/]");
+                            return false;
+                        }
+                        return true;
+                    };
+                    DateTime newDate = Prompt.GetDate("Enter new date:", validateDate);
+                    reservationToEdit.Date = newDate;
+                    break;
+                case "Lane":
+                    var lanes = _laneService.GetByDate(reservationToEdit.Date);
+                    if (lanes == null || lanes.Count == 0)
+                    {
+                        AnsiConsole.MarkupLine("[red]No available lanes found for this date.[/]");
+                        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+                        Console.ReadKey();
+                        return;
+                    }
+                    var lane = Prompt.SelectFromList("Select available lane", lanes);
+                    reservationToEdit.LaneId = lane.Id;
+                    break;
+                case "Exit":
+                    exit = true;
+                    break;
+            }
         }
-        Reservation updatedReservation = new Reservation(reservationDate, details, reservationToEdit.UserId, lane.Id);
-        updatedReservation.Id = reservationToEdit.Id;
-        _reservationService.Update(updatedReservation);
+        _reservationService.Update(reservationToEdit);
+        Task.Delay(2000).Wait();
     }
 
     private void MakeReservation()

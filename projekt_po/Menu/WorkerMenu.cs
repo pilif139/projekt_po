@@ -51,7 +51,7 @@ public class WorkerMenu : BaseMenu
             }
             ListItems(availableLanes);
         }
-        AnsiConsole.WriteLine("[yellow]Press any key to continue...[/]");
+        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
         Console.ReadKey();
     }
 
@@ -59,7 +59,8 @@ public class WorkerMenu : BaseMenu
     {
         AnsiConsole.Clear();
         AnsiConsole.MarkupLine("[cyan]Update lane price[/]");
-        var lanes = _laneService.GetAvailable();
+        var workerId = _authService.GetLoggedUser()!.Id;
+        var lanes = _laneService.GetByWorker(workerId);
         if (lanes == null || lanes.Count == 0)
         {
             AnsiConsole.MarkupLine("[red]No available lanes found.[/]");
@@ -77,7 +78,8 @@ public class WorkerMenu : BaseMenu
 
     private void ChangeLaneStatus()
     {
-        var lanes = _laneService.GetAll();
+        var workerId = _authService.GetLoggedUser()!.Id;
+        var lanes = _laneService.GetByWorker(workerId);
         if (lanes == null || lanes.Count == 0)
         {
             AnsiConsole.MarkupLine("[red]No lanes found.[/]");
@@ -98,7 +100,7 @@ public class WorkerMenu : BaseMenu
         }
         lane.Status = status;
         _laneService.Update(lane);
-        AnsiConsole.WriteLine("[yellow]Press any key to continue...[/]");
+        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
         Console.ReadKey();
     }
 
@@ -170,7 +172,14 @@ public class WorkerMenu : BaseMenu
                     break;
                 case "Lane":
                     var lanes = _laneService.GetByDate(reservation.Date);
-                    var lane = Prompt.SelectFromList("Select available lane", lanes!);
+                    if (lanes == null || lanes.Count == 0)
+                    {
+                        AnsiConsole.MarkupLine("[red]No available lanes found for this date.[/]");
+                        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+                        Console.ReadKey();
+                        return;
+                    }
+                    var lane = Prompt.SelectFromList("Select available lane", lanes);
                     reservation.LaneId = lane.Id;
                     break;
                 case "Exit":
@@ -179,7 +188,6 @@ public class WorkerMenu : BaseMenu
             }
         }
         _reservationService.Update(reservation);
-        AnsiConsole.MarkupLine("[green]Reservation updated successfully.[/]");
         Task.Delay(2000).Wait();
     }
 
