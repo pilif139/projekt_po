@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using projekt_po.Database;
 using projekt_po.Model;
 
@@ -26,27 +27,27 @@ public class LaneRepository : ILaneRepository
     
     public Lane? Get(int laneId)
     {
-        return _db.Lanes.FirstOrDefault(x => x.Id == laneId);
+        return _db.Lanes.Include(l => l.User).FirstOrDefault(x => x.Id == laneId);
     }
 
     public List<Lane> GetAll()
     {
-        return _db.Lanes.OrderBy(x => x.Id).ToList();
+        return _db.Lanes.OrderBy(x => x.Id).Include(l => l.User).ToList();
     }
 
     public Lane? GetByNumber(int number)
     {
-        return _db.Lanes.FirstOrDefault(x => x.Number == number);
+        return _db.Lanes.Include(l => l.User).FirstOrDefault(x => x.Number == number);
     }
 
     public List<Lane> GetByStatus(LaneStatus status)
     {
-        return _db.Lanes.Where(x => x.Status == status).ToList();
+        return _db.Lanes.Where(x => x.Status == status).Include(l => l.User).ToList();
     }
 
     public List<Lane> GetByUserId(int userId)
     {
-        return _db.Lanes.Where(x => x.UserId == userId).ToList();
+        return _db.Lanes.Where(x => x.UserId == userId).Include(l => l.User).ToList();
     }
 
     public Lane Add(int number, LaneStatus status, decimal price, int userId)

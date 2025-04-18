@@ -19,10 +19,20 @@ public class DatabaseContext : DbContext
             .WithOne(r => r.User)
             .HasForeignKey(r => r.UserId);
         
+        modelBuilder.Entity<User>()
+            .HasMany(u => u.Lanes)
+            .WithOne(l => l.User)
+            .HasForeignKey(l => l.UserId);
+        
         modelBuilder.Entity<Reservation>()
             .HasOne(r => r.User)
             .WithMany(u => u.Reservations)
             .HasForeignKey(r => r.UserId);
+        
+        modelBuilder.Entity<Reservation>()
+            .HasOne(r => r.Lane)
+            .WithMany(l => l.Reservations)
+            .HasForeignKey(r => r.LaneId);
 
         modelBuilder.Entity<Lane>()
             .HasMany(l => l.Reservations)
@@ -33,7 +43,7 @@ public class DatabaseContext : DbContext
             .HasOne<User>(l => l.User)
             .WithMany(u => u.Lanes)
             .HasForeignKey(l => l.UserId);
-
+        
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

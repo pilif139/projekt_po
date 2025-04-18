@@ -1,4 +1,5 @@
-﻿using projekt_po.Model;
+﻿using Microsoft.EntityFrameworkCore;
+using projekt_po.Model;
 using projekt_po.Database;
 
 namespace projekt_po.Repository;
@@ -10,7 +11,7 @@ public interface IReservationRepository
     List<Reservation>? GetAllByUser(int userId);
     List<Reservation>? GetByDate(DateTime date);
     List<Reservation>? GetByLane(int laneId);
-    Reservation Add(int userId, string details, DateTime reservationDate);
+    Reservation Add(int userId, string details, DateTime reservationDate, int laneId);
     bool Delete(int reservationId);
     bool Update(Reservation reservation);
 }
@@ -34,16 +35,26 @@ public class ReservationRepository : IReservationRepository
         return _db.Reservations
             .Where(r => r.UserId == userId)
             .OrderBy(r => r.Date)
+            .Include(r => r.User)
+            .Include(r => r.Lane)
             .ToList();
     }
     public List<Reservation> GetAll()
     {
-        return _db.Reservations.OrderBy(r => r.Date).ToList();
+        return _db.Reservations
+            .OrderBy(r => r.Date)
+            .Include(r => r.User)
+            .Include(r => r.Lane)
+            .ToList();
     }
 
     public List<Reservation>? GetByDate(DateTime date)
     {
-        return _db.Reservations.Where(r => r.Date == date).ToList();
+        return _db.Reservations
+            .Where(r => r.Date == date)
+            .Include(r => r.User)
+            .Include(r => r.Lane)
+            .ToList();
     }
     
     public List<Reservation> GetByLane(int laneId)
@@ -51,18 +62,14 @@ public class ReservationRepository : IReservationRepository
         return _db.Reservations
             .Where(r => r.LaneId == laneId)
             .OrderBy(r => r.Date)
+            .Include(r => r.User)
+            .Include(r => r.Lane)
             .ToList();
     }
 
-    public Reservation Add(int userId, string details, DateTime reservationDate)
+    public Reservation Add(int userId, string details, DateTime reservationDate, int laneId)
     {
-        var reservation = new Reservation
-        {
-            UserId = userId,
-            Details = details,
-            Date = reservationDate
-        };
-
+        var reservation = new Reservation(reservationDate, details,userId , laneId);
         _db.Reservations.Add(reservation);
         _db.SaveChanges();
         return reservation;
