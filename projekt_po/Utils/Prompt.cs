@@ -1,4 +1,5 @@
-﻿using Spectre.Console;
+﻿using projekt_po.Services;
+using Spectre.Console;
 
 namespace projekt_po.Utils;
 
@@ -55,7 +56,7 @@ public static class Prompt
                     {
                         return ValidationResult.Error($"Number must be less than {max}");
                     }
-                    return ValidationResult.Error("Invalid input.");
+                    return ValidationResult.Success();
                 }
             );
         return AnsiConsole.Prompt(numberPrompt);
@@ -110,12 +111,20 @@ public static class Prompt
         return selected;
     }
     
-    public static DateTime GetDate(string prompt)
+    public static DateTime GetDate(string prompt, Func<DateTime, bool>? validate = null)
     {
         const string format = "yyyy-MM-dd HH:mm";
         var input = AnsiConsole.Prompt(
             new TextPrompt<DateTime>(prompt.Length > 0 ? $"{prompt} {format}" : $"Enter a date {format}:")
                 .InvalidChoiceMessage("Invalid date")
+                .Validate((val) =>
+                {
+                    if (validate != null && !validate(val))
+                    {
+                        return ValidationResult.Error("Invalid date");
+                    }
+                    return ValidationResult.Success();
+                })
                 .PromptStyle("grey"));
         return input;
     }
