@@ -43,12 +43,53 @@ public class AdminMenu : BaseMenu
         }
 
         var reservation = Prompt.SelectFromList("Choose reservation", reservations);
-        string details = Prompt.GetString("Enter new reservation details: ");
-        DateTime date = Prompt.GetDate("Enter new reservation date: ");
-        reservation.Details = details;
-        reservation.Date = date;
+        var menuOptions = new List<string>
+        {
+            "Date",
+            "Details",
+            "Lane",
+            "Exit"
+        };
+        bool exit = false;
+        while (!exit)
+        {
+            var option = Prompt.SelectFromList("Choose property to edit", menuOptions);
+            switch (option)
+            {
+                case "Date":
+                    Func<DateTime, bool> validateDate = (val) =>
+                    {
+                        if (val < DateTime.Now)
+                        {
+                            AnsiConsole.MarkupLine("[red]Date must be in the future.[/]");
+                            return false;
+                        }
+
+                        if (!_reservationService.CheckAvailability(val, reservation.LaneId))
+                        {
+                            AnsiConsole.MarkupLine("[red]Lane is not available on this date.[/]");
+                            return false;
+                        }
+                        return true;
+                    };
+                    DateTime newDate = Prompt.GetDate("Enter new date:", validateDate);
+                    reservation.Date = newDate;
+                    break;
+                case "Details":
+                    string newDetails = Prompt.GetString("Enter new details:");
+                    reservation.Details = newDetails;
+                    break;
+                case "Lane":
+                    var lanes = _laneService.GetByDate(reservation.Date);
+                    var lane = Prompt.SelectFromList("Select available lane", lanes!);
+                    reservation.LaneId = lane.Id;
+                    break;
+                case "Exit":
+                    exit = true;
+                    break;
+            }
+        }
         _reservationService.Update(reservation);
-        AnsiConsole.MarkupLine("[green]Reservation updated successfully.[/]");
         Task.Delay(2000).Wait();
     }
 
@@ -159,6 +200,7 @@ public class AdminMenu : BaseMenu
                     break;
                 case "Status":
                     var status = Prompt.SelectFromList<LaneStatus>("Select status");
+                    if (status == LaneStatus.Closed) _laneService.CloseLane(lane.Id);
                     lane.Status = status;
                     break;
                 case "Worker":
@@ -204,7 +246,6 @@ public class AdminMenu : BaseMenu
             Lane newLane = new Lane(status, number, price, worker.Id);
             if (_laneService.Add(newLane))
             {
-                AnsiConsole.MarkupLine("[green]Lane added successfully.[/]");
                 AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
                 Console.ReadKey();
                 return;
@@ -254,8 +295,6 @@ public class AdminMenu : BaseMenu
             Reservation newReservation = new Reservation(reservationDate, details, client.Id, lane.Id);
             if (_reservationService.Add(newReservation)) break;
         }
-
-        AnsiConsole.MarkupLine("[green]Reservation added successfully.[/]");
         Task.Delay(2000).Wait();
     }
 
@@ -293,7 +332,6 @@ public class AdminMenu : BaseMenu
             }
             else
             {
-                AnsiConsole.MarkupLine("[green]User added successfully.[/]");
                 AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
                 Console.ReadKey();
                 return;
