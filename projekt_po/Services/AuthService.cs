@@ -25,6 +25,7 @@ public class AuthService : BaseService, IAuthService
         _userRepository = userRepository;
     }
 
+    // used to log in the user
     public bool Authenticate(string login,string password)
     {
         // first checks if the user exists in the database
@@ -47,7 +48,8 @@ public class AuthService : BaseService, IAuthService
         Log($"User {login} tried to login with wrong password.");
         return false;
     }
-
+    
+    // used to register the user
     public bool Register(string login,string name, string surname, string password, Role role)
     {
         // checks if user with the same name and surname already exists

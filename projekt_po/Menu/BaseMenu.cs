@@ -23,11 +23,20 @@ public abstract class BaseMenu
         _authService = authService;
     }
     
+    /// <summary>
+    /// Adds a menu option to the dictionary that is then displayed with the Show method.
+    /// <param name="option">Name of the option that will be displayed in the menu</param>
+    /// <param name="action">Method that will be executed when the option is selected</param>
+    /// </summary>
     protected void AddMenuOption(string option, Action action)
     {
         _menuOptions.TryAdd(option, action);
     }
-
+    
+    /// <summary>
+    /// Displays menu options from the dicitonary and invokes the action when the option is selected.
+    /// It has explicit option to logout.
+    /// </summary>
     public void Show()
     {
         while (true)
@@ -52,7 +61,11 @@ public abstract class BaseMenu
             }
         }
     }
-
+    
+    /// <summary>
+    /// Displays a list of items in a table format with nice animation at the start.
+    /// <param name="items">List of the generic type that is any IModelType</param>
+    /// </summary>
     protected void ListItems<T>(List<T>? items) where T : IModelType
     {
         AnsiConsole.Clear();
@@ -113,6 +126,11 @@ public abstract class BaseMenu
         Console.ReadKey();
     }
     
+    /// <summary>
+    /// Displays a list of items and allows to delete selected items.
+    /// <param name="service">Service of the generic type T that is used to invoke delete method</param>
+    /// <param name="items">list of the generic type T that is ModelType, used to pick item to delete</param>
+    /// </summary>
     protected void DeleteItems<T>(IModelService<T> service, List<T>? items) where T : class,IModelType
     {
         string modelName = typeof(T).Name;

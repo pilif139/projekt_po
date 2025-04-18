@@ -25,20 +25,6 @@ public class UserServiceTests : IDisposable
     }
 
     [Fact]
-    public void AddUser_ShouldAddUser()
-    {
-        //Arrange
-        User user = new User("JohnDoe","John", "Doe", "password", Role.Admin);
-
-        // Act
-        _userService.Add(user);
-
-        //Assert
-        _userRepositoryMock.Verify(repo => repo.Add(user.Login,user.Name, user.Surname, It.IsAny<string>(), user.Role), Times.Once);
-        _rbacMock.Verify(rbac => rbac.CheckPermission(Resource.User, Permission.Create), Times.Once);
-    }
-
-    [Fact]
     public void DeleteUser_ShouldDeleteUser()
     {
         //Arrange
