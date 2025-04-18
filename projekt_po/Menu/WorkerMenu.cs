@@ -71,7 +71,7 @@ public class WorkerMenu : BaseMenu
             lane.Price = newPrice;
             _laneService.Update(lane);
         }
-        AnsiConsole.WriteLine("[yellow]Press any key to continue...[/]");
+        AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
         Console.ReadKey();
     }
 
@@ -89,6 +89,13 @@ public class WorkerMenu : BaseMenu
         AnsiConsole.MarkupLine("[cyan]Change lane status[/]");
         var lane = Prompt.SelectFromList("Select lane", lanes);
         var status = Prompt.SelectFromList<LaneStatus>("Select status");
+        if (status == LaneStatus.Closed)
+        {
+            AnsiConsole.MarkupLine("[red]Only admin can close lane.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
+            return;
+        }
         lane.Status = status;
         _laneService.Update(lane);
         AnsiConsole.WriteLine("[yellow]Press any key to continue...[/]");
@@ -106,12 +113,113 @@ public class WorkerMenu : BaseMenu
 
     private void UpdateReservation()
     {
-        
+        var clients = _userService.GetAllByRole(Role.Client);
+        AnsiConsole.Clear();
+        if (clients == null || clients.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No clients found.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
+            return;
+        }
+        var client = Prompt.SelectFromList("Select client", clients);
+        var reservations = _reservationService.GetAllByUser(client.Id);
+        if (reservations == null || reservations.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No reservations found for this client.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
+            return;
+        }
+        var reservation = Prompt.SelectFromList("Select reservation", reservations);
+        var menuOptions = new List<string>
+        {
+            "Date",
+            "Details",
+            "Lane",
+            "Exit"
+        };
+        bool exit = false;
+        while (!exit)
+        {
+            var option = Prompt.SelectFromList("Choose property to edit", menuOptions);
+            switch (option)
+            {
+                case "Date":
+                    Func<DateTime, bool> validateDate = (val) =>
+                    {
+                        if (val < DateTime.Now)
+                        {
+                            AnsiConsole.MarkupLine("[red]Date must be in the future.[/]");
+                            return false;
+                        }
+
+                        if (!_reservationService.CheckAvailability(val, reservation.LaneId))
+                        {
+                            AnsiConsole.MarkupLine("[red]Lane is not available on this date.[/]");
+                            return false;
+                        }
+                        return true;
+                    };
+                    DateTime newDate = Prompt.GetDate("Enter new date:", validateDate);
+                    reservation.Date = newDate;
+                    break;
+                case "Details":
+                    string newDetails = Prompt.GetString("Enter new details:");
+                    reservation.Details = newDetails;
+                    break;
+                case "Lane":
+                    var lanes = _laneService.GetByDate(reservation.Date);
+                    var lane = Prompt.SelectFromList("Select available lane", lanes!);
+                    reservation.LaneId = lane.Id;
+                    break;
+                case "Exit":
+                    exit = true;
+                    break;
+            }
+        }
+        _reservationService.Update(reservation);
+        AnsiConsole.MarkupLine("[green]Reservation updated successfully.[/]");
+        Task.Delay(2000).Wait();
     }
 
     private void AddReservation()
     {
-        
+        var clients = _userService.GetAllByRole(Role.Client);
+        AnsiConsole.Clear();
+        AnsiConsole.MarkupLine("[cyan]Add reservation[/]");
+        if (clients == null || clients.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No clients found.[/]");
+            AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+            Console.ReadKey();
+            return;
+        }
+        var client = Prompt.SelectFromList("Select client", clients);
+        while (true)
+        {
+            var date = Prompt.GetDate("Enter date");
+            var lanes = _laneService.GetByDate(date);
+            if (lanes == null || lanes.Count == 0)
+            {
+                AnsiConsole.MarkupLine("[red]No available lanes found for this date.[/]");
+                AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+                Console.ReadKey();
+                return;
+            }
+
+            var lane = Prompt.SelectFromList("Select lane", lanes);
+            var details = Prompt.GetString("Enter details");
+            var reservation = new Reservation
+            {
+                UserId = client.Id,
+                LaneId = lane.Id,
+                Date = date,
+                Details = details
+            };
+            if (_reservationService.Add(reservation)) break;
+        }
+        Task.Delay(2500).Wait();
     }
 
     private void DeleteReservation()
@@ -126,8 +234,14 @@ public class WorkerMenu : BaseMenu
         {
             var client = Prompt.SelectFromList("Select client", clients);
             var reservations = _reservationService.GetAllByUser(client.Id);
-            var reservationsToDelete = Prompt.SelectMultipleFromList("Select reservation to delete", reservations);
-            DeleteItems(_reservationService, reservationsToDelete);
+            if (reservations == null || reservations.Count == 0)
+            {
+                AnsiConsole.MarkupLine("[red]No reservations found for this client.[/]");
+                AnsiConsole.MarkupLine("[yellow]Press any key to continue...[/]");
+                Console.ReadKey();
+                return;
+            }
+            DeleteItems(_reservationService, reservations);
         }
     }
 
