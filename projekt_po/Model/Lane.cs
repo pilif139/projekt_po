@@ -68,14 +68,10 @@ public class Lane : IModelType
     {
         User = user;
     }
-    
+
     public override string ToString()
     {
-        return $"Lane number: {Number}, Price: {Price}, status: {Status.ToString()}, worker assigned: {User?.ToString() ?? "none"}";
-    }
-    
-    public static implicit operator string(Lane lane)
-    {
-        return lane.Price.ToString("C", CultureInfo.CurrentCulture);
+        return
+            $"Lane number: {Number}, Price: {Price}, status: {Status}, worker assigned: {(User != null ? User.Name + " " + User.Surname : "No worker assigned")}";
     }
 }

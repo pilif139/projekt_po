@@ -42,10 +42,15 @@ public class Reservation : IModelType
     {
         User = user;
         Lane = lane;
-    }
+    }         
+    
 
     public override string ToString()
     {
-        return $"Reservation id: {Id}, user id: {UserId}, Date: {Date}, \nDetails: {Details}, Lane number: {Lane.Number}";
+        // Assuming the issue is with User or Lane properties being null
+        string userInfo = User != null ? $"{User.Name} {User.Surname}" : "Unknown User";
+        string laneInfo = Lane != null ? $"{Lane.Number}, {Lane.Price}" : "Unknown Lane";
+    
+        return $"Reservation on {Date:yyyy-MM-dd HH:mm} for user: {userInfo} on lane {laneInfo} - {Details}";
     }
 }
